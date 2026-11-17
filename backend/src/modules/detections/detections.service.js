@@ -10,6 +10,7 @@ const logger = require('../../config/logger');
 const crypto = require('crypto');
 const fs = require('fs');
 const { analyzeCropImage, confidenceTier } = require('./detections.vision');
+const { matchVerifiedDisease, verifiedFields } = require('./disease.knowledge');
 
 // In-memory detection cache for offline / demo mode
 const detectionsMemoryStore = new Map();
@@ -91,6 +92,9 @@ async function processDetectionJob(detectionId, cropHint, file) {
   const recommendations = [...(analysis?.recommendations || []), ...(analysis?.prevention || [])].filter(Boolean).join(' ');
   const symptoms = [...(analysis?.primary_diagnosis?.symptoms_observed || []), ...(analysis?.alternative_diagnoses || [])].filter(Boolean).join('; ');
 
+  const verifiedMatch = suitable ? matchVerifiedDisease(diseaseName, analysis?.crop_name, cropHint) : null;
+  const vFields = verifiedFields(verifiedMatch);
+
   const result = {
     disease_name: diseaseName,
     crop_name: analysis?.crop_name || null,
@@ -98,9 +102,9 @@ async function processDetectionJob(detectionId, cropHint, file) {
     health_status: analysis?.health_status || 'unclear',
     confidence_score: confidence,
     severity: suitable ? analysis.severity : 'unknown',
-    cure_organic: recommendations || 'Visit the nearest KVK/agriculture officer for field verification before treatment.',
-    cure_chemical: 'Do not spray chemicals without expert confirmation.',
-    prevention_tips: analysis?.prevention?.join(' ') || symptoms || 'Capture clearer leaf images in natural light.',
+    cure_organic: verifiedMatch ? verifiedMatch.organic_hi : (recommendations || 'Visit the nearest KVK/agriculture officer for field verification before treatment.'),
+    cure_chemical: verifiedMatch ? verifiedMatch.chemical_hi : 'Do not spray chemicals without expert confirmation.',
+    prevention_tips: verifiedMatch ? verifiedMatch.prevention_hi + ' [स्रोत: ' + verifiedMatch.source + ']' : (analysis?.prevention?.join(' ') || symptoms || 'Capture clearer leaf images in natural light.'),
     symptoms_observed: symptoms || null,
     alternative_diagnoses: analysis?.alternative_diagnoses || [],
     needs_expert_verification: analysis?.needs_expert_verification !== false,
@@ -111,6 +115,8 @@ async function processDetectionJob(detectionId, cropHint, file) {
     status: 'completed',
     expert_verified: false,
     image_suitable: analysis?.image_suitable !== false,
+    verified_match: Boolean(verifiedMatch),
+    ...vFields,
   };
 
   const existing = detectionsMemoryStore.get(detectionId) || {};

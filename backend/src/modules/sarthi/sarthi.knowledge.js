@@ -4,7 +4,9 @@
 //  and Department of Agriculture, Government of Bihar.
 // ═══════════════════════════════════════════════════════════════════
 
-const VERIFIED_AGRI_KNOWLEDGE = [
+const { DISEASE_KNOWLEDGE } = require('../detections/disease.knowledge');
+
+const BASE_AGRI_KNOWLEDGE = [
   {
     topic: 'makhana_cultivation',
     title_hi: 'मिथिला मखाना की वैज्ञानिक खेती एवं प्रबंधन',
@@ -67,6 +69,20 @@ const VERIFIED_AGRI_KNOWLEDGE = [
   }
 ];
 
+// ── Verified disease entries (from detections/disease.knowledge.js) ──
+const DISEASE_AGRI_ENTRIES = DISEASE_KNOWLEDGE.map(d => ({
+  topic: 'disease_' + d.id,
+  title_hi: d.name_hi,
+  districts: ['ALL'],
+  crops: [d.crop],
+  keywords: [...d.aliases, d.name_en, d.name_hi],
+  content_hi: 'लक्षण: ' + d.symptoms_hi + '\n\nजैविक उपचार: ' + d.organic_hi + '\n\nरासायनिक उपचार (सावधानी से, लेबल दर जांचें): ' + d.chemical_hi + '\n\nरोकथाम: ' + d.prevention_hi,
+  verified_source: d.source
+}));
+
+const VERIFIED_AGRI_KNOWLEDGE = [...BASE_AGRI_KNOWLEDGE, ...DISEASE_AGRI_ENTRIES];
+
 module.exports = {
-  VERIFIED_AGRI_KNOWLEDGE
+  VERIFIED_AGRI_KNOWLEDGE,
+  DISEASE_AGRI_ENTRIES
 };
