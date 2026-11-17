@@ -1611,6 +1611,7 @@ async function sendChat() {
     if (!res.ok) throw new Error('Network response was not ok');
     
     const data = await readApiJson(res);
+    const replyText = data?.data?.reply || data?.reply || data?.response || 'No response received.';
     
     // Remove typing indicator
     if (messages.contains(typingMsg)) {
@@ -1623,7 +1624,7 @@ async function sendChat() {
     botMsg.innerHTML = `
       <div class="msg-avatar">🤖</div>
       <div class="msg-bubble">
-        ${data.response}
+        ${replyText}
         <button class="btn-speak-msg" onclick="speakText(this.closest('.msg-bubble').innerText.replace('🔊', ''))" title="Listen 🔊">🔊</button>
       </div>
     `;
