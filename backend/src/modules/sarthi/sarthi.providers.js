@@ -9,7 +9,8 @@ const logger = require('../../config/logger');
  * Call Google Gemini API
  */
 async function callGemini(systemPrompt, userMessage, apiKey) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const payload = {
     contents: [
