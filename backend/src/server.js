@@ -11,16 +11,10 @@ const logger = require('./config/logger');
 assertEnv();
 
 const app = require('./app');
-const REQUESTED_PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
-if (REQUESTED_PORT !== 3001) {
-  console.error(`\n❌ Only port 3001 is supported for Krishi Sarthi. Received PORT=${process.env.PORT}.`);
-  console.error('   Use PORT=3001 or unset PORT. No alternate port will be used.\n');
-  process.exit(1);
-}
-const PORT = 3001;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info({
     port: PORT,
     env: NODE_ENV,

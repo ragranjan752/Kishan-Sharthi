@@ -3,6 +3,18 @@
 //  Firebase Edition — Phone OTP Auth + Firestore
 // ═══════════════════════════════════════════
 
+// ── Universal API Base Routing (supports both unified & split Render deployments) ──
+const API_BASE = window.API_BASE_URL || document.querySelector('meta[name="backend-api-url"]')?.content?.replace(/\/$/, '') || '';
+if (API_BASE) {
+  const originalFetch = window.fetch;
+  window.fetch = function (resource, init) {
+    if (typeof resource === 'string' && resource.startsWith('/api')) {
+      return originalFetch(`${API_BASE}${resource}`, init);
+    }
+    return originalFetch(resource, init);
+  };
+}
+
 // ── State ──
 let currentUser = null;
 let cachedProducts = [];

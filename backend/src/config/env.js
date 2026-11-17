@@ -12,18 +12,29 @@ const requiredVars = {
   SUPABASE_SERVICE_ROLE_KEY: { required: false, description: 'Legacy alias for SUPABASE_SECRET_KEY' },
 
   // JWT
-  JWT_SECRET: { required: true, minLength: 32, description: 'JWT signing secret (min 32 chars)' },
+  JWT_SECRET: { required: false, minLength: 32, description: 'JWT signing secret (min 32 chars)' },
   JWT_EXPIRES_IN: { required: false, description: 'JWT expiry (default: 7d)' },
 
   // Server
-  PORT: { required: false, description: 'Server port (only 3001 is supported)' },
+  PORT: { required: false, description: 'Server port (default: 3001 or cloud-provided)' },
   NODE_ENV: { required: false, description: 'Environment: development|production|test' },
 };
 
+const crypto = require('crypto');
 const warnings = [];
 const errors = [];
 
 function validateEnv() {
+  // Ensure JWT_SECRET is present or generate runtime fallback
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    if (!process.env.JWT_SECRET) {
+      process.env.JWT_SECRET = crypto.randomBytes(32).toString('hex');
+      warnings.push('JWT_SECRET was not provided. Generated a secure runtime secret for this session. Add JWT_SECRET to your environment for persistent sessions.');
+    } else {
+      errors.push('JWT_SECRET must be at least 32 characters long');
+    }
+  }
+
   for (const [key, config] of Object.entries(requiredVars)) {
     const value = process.env[key];
 

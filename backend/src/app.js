@@ -34,13 +34,28 @@ app.use(helmet({
 
 // ── 2. CORS Whitelisting ──
 const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
-  : ['http://localhost:3001'];
+  ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim().replace(/\/$/, ''))
+  : [];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, postman)
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (mobile apps, curl, postman, same-origin)
+    if (!origin) {
+      return callback(null, true);
+    }
+    // Explicitly allowed origins
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    // Auto-allow any Render deployment domain or localhost
+    if (
+      /^https?:\/\/[a-z0-9-]+\.onrender\.com$/i.test(origin) ||
+      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)
+    ) {
+      return callback(null, true);
+    }
+    // Development fallback
+    if (process.env.NODE_ENV !== 'production') {
       return callback(null, true);
     }
     return callback(null, false);

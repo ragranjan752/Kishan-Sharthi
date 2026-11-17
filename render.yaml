@@ -1,0 +1,32 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Render Blueprint — Krishi Sarthi (Bihar Edition)
+#  Deploy Backend API & Frontend UI together on Render (Free Tier)
+# ═══════════════════════════════════════════════════════════════════
+
+services:
+  - type: web
+    name: kishan-sharthi
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://kishan-sharthi.onrender.com,http://localhost:3000,http://localhost:3001
