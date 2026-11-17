@@ -154,9 +154,10 @@ async function create(farmerData) {
 
   if (isConfigured && process.env.NODE_ENV !== 'test') {
     try {
+      const { land_size_bigha: _genBigha, ...dbPayload } = normalized;
       const { data, error } = await supabase
         .from(TABLE)
-        .insert(normalized)
+        .insert(dbPayload)
         .select('id, name, phone, email, district, block, primary_crop, farmer_category, role, land_size_kattha, land_size_bigha, profile_image_url, is_active, phone_verified, profile_completed, profile_completed_at, auth_user_id, created_at, updated_at')
         .single();
 
@@ -199,9 +200,10 @@ async function update(farmerId, updateData) {
 
   if (isConfigured && process.env.NODE_ENV !== 'test') {
     try {
+      const { land_size_bigha: _genBigha2, ...safeUpdate } = updateData;
       const { data, error } = await supabase
         .from(TABLE)
-        .update(updateData)
+        .update(safeUpdate)
         .eq('id', farmerId)
         .select('id, name, phone, email, district, block, primary_crop, farmer_category, land_size_kattha, land_size_bigha, profile_image_url, profile_completed, profile_completed_at, auth_user_id, updated_at')
         .single();
