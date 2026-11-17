@@ -26,6 +26,10 @@ const demoRoutes = require('./modules/demo/demo.routes');
 const app = express();
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
+// Render (and other PaaS) sit behind a proxy — trust the first hop so
+// express-rate-limit reads the real client IP from X-Forwarded-For.
+app.set('trust proxy', 1);
+
 // ── 1. Security Headers ──
 app.use(helmet({
   contentSecurityPolicy: false, // Allows inline scripts in frontend app.js
