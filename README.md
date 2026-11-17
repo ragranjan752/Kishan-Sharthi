@@ -196,10 +196,6 @@ curl -X POST \
 
 MIT License - [LICENSE](LICENSE) फाइल देखें
 
-## 📞 संपर्क
-
-- ईमेल: support@krishisarthi.in
-- वेबसाइट: www.krishisarthi.in
 
 ---
 
