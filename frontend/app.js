@@ -50,9 +50,30 @@ window.addEventListener('scroll', () => {
   if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 50);
 });
 
-function toggleMobileMenu() {
+function toggleMobileMenu(forceClose) {
   const links = document.getElementById('nav-links');
-  if (links) links.style.display = links.style.display === 'flex' ? 'none' : 'flex';
+  if (!links) return;
+  if (forceClose === false) {
+    links.classList.remove('mobile-open');
+    links.style.display = 'none';
+  } else {
+    const isOpen = links.classList.toggle('mobile-open');
+    links.style.display = isOpen ? 'flex' : 'none';
+  }
+}
+
+function toggleSidebar(forceState) {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (!sidebar) return;
+  const shouldOpen = typeof forceState === 'boolean' ? forceState : !sidebar.classList.contains('open');
+  sidebar.classList.toggle('open', shouldOpen);
+  if (backdrop) backdrop.classList.toggle('active', shouldOpen);
+  if (shouldOpen) {
+    document.body.classList.add('sidebar-locked');
+  } else {
+    document.body.classList.remove('sidebar-locked');
+  }
 }
 
 function openAuth(tab) {
@@ -663,16 +684,46 @@ async function confirmPasswordReset() {
 function showPage(pageId, elem) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + pageId).classList.add('active');
-  if (elem) elem.classList.add('active');
-  else { document.querySelectorAll('.nav-item').forEach(n => { if (n.textContent.toLowerCase().includes(pageId)) n.classList.add('active'); }); }
+  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+
+  const targetPage = document.getElementById('page-' + pageId);
+  if (targetPage) targetPage.classList.add('active');
+
+  if (elem && (elem.classList.contains('nav-item') || elem.classList.contains('mobile-nav-btn'))) {
+    elem.classList.add('active');
+  } else {
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.textContent.toLowerCase().includes(pageId)) n.classList.add('active');
+    });
+  }
+
+  // Sync mobile bottom navigation bar
+  const matchingBottomBtn = document.querySelector(`.mobile-nav-btn[data-page="${pageId}"]`);
+  if (matchingBottomBtn) matchingBottomBtn.classList.add('active');
+
   const titles = { dashboard:'Dashboard', disease:'AI Disease Detection', trace:'Farm-to-Fork QR', tools:'Tool Sharing', weather:'Smart Irrigation', market:'Fertilizer Marketplace', mandi:'Mandi Prices', schemes:'Govt Schemes', community:'Kisan Community', offline:'SMS / IVR Access', sos:'SOS Emergency' };
-  document.getElementById('page-title').textContent = titles[pageId] || pageId;
-  document.getElementById('sidebar').classList.remove('open');
-  window.scrollTo(0, 0);
+  const titleEl = document.getElementById('page-title');
+  if (titleEl) titleEl.textContent = titles[pageId] || pageId;
+
+  toggleSidebar(false);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
   if (pageId === 'community') loadCommunity();
   if (pageId === 'market') prefillFertilizerCalculator();
   if (pageId === 'tools') loadToolSharing();
+}
+
+function triggerCamera() {
+  const cameraInput = document.getElementById('camera-input');
+  if (cameraInput) {
+    cameraInput.click();
+  } else {
+    document.getElementById('file-input')?.click();
+  }
+}
+
+function triggerGallery() {
+  document.getElementById('file-input')?.click();
 }
 
 // ── Dashboard ──
@@ -766,6 +817,8 @@ function handleImageUpload(e) {
       preview.style.display = 'block';
     }
     document.getElementById('upload-zone').style.display = 'none';
+    const mobileActions = document.getElementById('disease-mobile-actions');
+    if (mobileActions) mobileActions.style.display = 'none';
     const diseaseResult = document.getElementById('disease-result');
     if (diseaseResult) {
       diseaseResult.style.display = 'block';
@@ -821,6 +874,7 @@ function showDiseaseResult(result, isDisease) {
       <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Severity: <strong>${result.severity}</strong></p>
       <div class="ai-bubble"><div class="ai-header"><div class="ai-dot"></div><span>AI Recommendation</span></div><strong>💊 Treatment:</strong><br>${result.cure}<br><br><strong>🛡 Prevention:</strong><br>${result.prevention}</div>
       ${isDisease ? '<button class="btn-primary" style="margin-top:12px;width:100%;" onclick="buyMedicine()">🛒 Buy Recommended Medicine</button>' : ''}
+      <button class="btn-hero-outline" style="margin-top:10px;width:100%;padding:10px;font-size:13px;border-radius:10px;" onclick="resetUpload()">📷 नई फोटो लें / Scan Another</button>
     </div>`;
 }
 
@@ -828,6 +882,8 @@ function resetUpload() {
   const preview = document.getElementById('preview-img');
   if (preview) preview.style.display = 'none';
   document.getElementById('upload-zone').style.display = '';
+  const mobileActions = document.getElementById('disease-mobile-actions');
+  if (mobileActions) mobileActions.style.display = '';
   const diseaseResult = document.getElementById('disease-result');
   if (diseaseResult) {
     diseaseResult.innerHTML = '';

@@ -3,10 +3,20 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
   <title>Krishi Sarthi — कृषि Sarthi | खेत की हर ज़रूरत, अब डिज़िटल साथ</title>
   <meta name="description"
     content="Kisan Sarthi - AI-powered smart farming platform for Indian farmers. Crop disease detection, weather advisory, mandi prices, government schemes & emergency SOS.">
+  
+  <!-- Mobile & iOS Specific Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Kisan Sarthi">
+  <meta name="theme-color" content="#15803D" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#052E16" media="(prefers-color-scheme: dark)">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png">
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" type="image/png" href="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png">
 </head>
@@ -528,6 +538,7 @@
           <span class="brand-name">Kisan Sarthi</span>
           <span class="brand-hindi">कृषि सारथी</span>
         </div>
+        <button class="sidebar-close-btn" id="sidebar-close-btn" onclick="toggleSidebar(false)" aria-label="Close menu">✕</button>
       </div>
       <div class="sidebar-user">
         <div class="user-avatar" id="sidebar-avatar">K</div>
@@ -554,16 +565,22 @@
         <div class="nav-item" onclick="logout()"><span class="icon">🚪</span> Logout</div>
       </div>
     </aside>
+    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
 
     <main class="main">
       <div class="topbar">
         <div class="topbar-left">
-          <h2 id="page-title">Dashboard</h2>
-          <p id="page-sub">Good morning, Farmer 🌤</p>
+          <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleSidebar(true)" aria-label="Open navigation menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <div class="topbar-title-wrap">
+            <h2 id="page-title">Dashboard</h2>
+            <p id="page-sub">Good morning, Farmer 🌤</p>
+          </div>
         </div>
         <div class="topbar-right">
-          <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"
-            style="display:none;" id="mobile-menu-btn">☰</button>
           <select class="lang-select" id="lang-select" onchange="changeLang(this.value)">
             <option value="en">🇮🇳 English</option>
             <option value="hi">हिन्दी</option>
@@ -656,11 +673,31 @@
         <!-- DISEASE DETECTION -->
         <div class="page" id="page-disease">
           <div class="section-title">🔬 AI Crop Disease Detection</div>
-          <p class="section-sub">Upload a photo of your crop leaf for instant AI-powered disease diagnosis</p>
+          <p class="section-sub">Upload or take a live photo of your crop leaf for instant AI diagnosis</p>
+          
+          <!-- Mobile Quick Action Buttons (One-Tap Camera & Gallery) -->
+          <div class="disease-mobile-actions" id="disease-mobile-actions">
+            <button type="button" class="btn-mobile-camera" onclick="triggerCamera()">
+              <span class="btn-icon">📷</span>
+              <span class="btn-text">
+                <strong>कैमरा से फोटो लें</strong>
+                <small>Take Live Photo</small>
+              </span>
+            </button>
+            <button type="button" class="btn-mobile-gallery" onclick="triggerGallery()">
+              <span class="btn-icon">🖼️</span>
+              <span class="btn-text">
+                <strong>गैलरी से चुनें</strong>
+                <small>Upload from Photos</small>
+              </span>
+            </button>
+          </div>
+          <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="handleImageUpload(event)" style="display:none;">
+
           <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
             <div class="upload-icon" id="upload-icon">📸</div>
             <h3>Click to Upload Crop Photo</h3>
-            <p>Supports JPG, PNG · Max 10MB · Wheat, Rice, Cotton, Tomato supported</p>
+            <p>Supports JPG, PNG · Max 10MB · Wheat, Rice, Cotton, Tomato, Maize, Makhana</p>
             <input type="file" id="file-input" accept="image/*" onchange="handleImageUpload(event)">
           </div>
           <img id="preview-img" class="preview-img" style="display:none;">
@@ -1319,6 +1356,34 @@
         </div>
       </div>
     </main>
+
+    <!-- Mobile Bottom Navigation (Phones & iOS) -->
+    <nav class="mobile-bottom-nav" id="mobile-bottom-nav" aria-label="Mobile Navigation">
+      <button type="button" class="mobile-nav-btn active" data-page="dashboard" onclick="showPage('dashboard', this)">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">होम</span>
+      </button>
+      <button type="button" class="mobile-nav-btn" data-page="disease" onclick="showPage('disease', this)">
+        <span class="nav-icon">🔬</span>
+        <span class="nav-label">जांचें</span>
+      </button>
+      <button type="button" class="mobile-nav-btn mobile-nav-highlight" data-page="sarthi" onclick="toggleChat()">
+        <span class="nav-icon">🤖</span>
+        <span class="nav-label">सारथी AI</span>
+      </button>
+      <button type="button" class="mobile-nav-btn" data-page="mandi" onclick="showPage('mandi', this)">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">मंडी भाव</span>
+      </button>
+      <button type="button" class="mobile-nav-btn" data-page="schemes" onclick="showPage('schemes', this)">
+        <span class="nav-icon">🏛</span>
+        <span class="nav-label">योजनाएं</span>
+      </button>
+      <button type="button" class="mobile-nav-btn" data-page="more" onclick="toggleSidebar()">
+        <span class="nav-icon">☰</span>
+        <span class="nav-label">मेन्यू</span>
+      </button>
+    </nav>
   </div>
 
   <!-- Toast Container -->
