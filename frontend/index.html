@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Krishi Sarthi — कृषि Sarthi | खेत की हर ज़रूरत, अब डिज़िटल साथ</title>
+  <meta name="description"
+    content="Kisan Sarthi - AI-powered smart farming platform for Indian farmers. Crop disease detection, weather advisory, mandi prices, government schemes & emergency SOS.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png">
+</head>
+
+<body>
+  <div id="traceability-view" class="traceability-view" style="display:none;">
+    <div class="traceability-shell">
+      <h1>Farm-to-Fork Verification</h1>
+      <p class="traceability-sub">Scan result from Kisan Sarthi</p>
+      <div id="traceability-loading" class="traceability-loading">Loading traceability record...</div>
+      <div id="traceability-content" style="display:none;">
+        <div class="traceability-grid">
+          <div class="traceability-card">
+            <div class="traceability-label">Produce</div>
+            <div id="trace-out-produce" class="traceability-value"></div>
+          </div>
+          <div class="traceability-card">
+            <div class="traceability-label">Farm Location</div>
+            <div id="trace-out-location" class="traceability-value"></div>
+          </div>
+          <div class="traceability-card">
+            <div class="traceability-label">Harvest Date</div>
+            <div id="trace-out-harvest" class="traceability-value"></div>
+          </div>
+          <div class="traceability-card">
+            <div class="traceability-label">Health Summary</div>
+            <div id="trace-out-health" class="traceability-value"></div>
+          </div>
+        </div>
+        <div class="traceability-logs">
+          <div class="card-title"><span class="dot"></span> Disease Detection Logs</div>
+          <div id="trace-out-logs"></div>
+        </div>
+      </div>
+      <div id="traceability-error" class="traceability-error" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ LANDING PAGE ══════════════════ -->
+  <div class="landing" id="landing-page">
+    <!-- Navbar -->
+    <header class="navbar" id="navbar">
+      <a href="#" class="nav-brand">
+        <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi Logo">
+        <div class="nav-brand-text">
+          <span class="nav-brand-name">Kisan Sarthi</span>
+          <span class="nav-brand-hindi">कृषि सारथी</span>
+        </div>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#testimonials">Farmers</a>
+        <a href="#download">Download</a>
+        <button class="nav-cta" onclick="openAuth('login')">🌱 Login / Sign Up</button>
+      </div>
+      <button class="menu-toggle" id="menu-toggle" onclick="toggleMobileMenu()">☰</button>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+      <div class="hero-content">
+        <div class="hero-badge">🚀 India's Smart Farming Platform</div>
+        <h1>
+          Your Farm's <span class="highlight">Digital Companion</span>
+          <span class="hindi">खेत की हर ज़रूरत, अब डिज़िटल साथ</span>
+        </h1>
+        <p class="hero-desc">
+          AI-powered crop disease detection, real-time weather & irrigation advice, mandi prices, government schemes —
+          all in one app. Works offline via SMS & IVR in 6 Indian languages.
+        </p>
+        <div class="hero-actions">
+          <button class="btn-hero btn-hero-primary" onclick="openAuth('signup')">🌾 Get Started Free</button>
+          <button class="btn-hero btn-hero-outline"
+            onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Explore Features
+            →</button>
+        </div>
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-num"></div>
+            <div class="hero-stat-label"></div>
+          </div>
+          <div>
+            <div class="hero-stat-num"></div>
+            <div class="hero-stat-label"></div>
+          </div>
+          <div>
+            <div class="hero-stat-num">6</div>
+            <div class="hero-stat-label">Languages</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-image">
+        <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png"
+          alt="Kisan Sarthi - Digital Farming Solutions">
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+      <div class="section-header">
+        <div class="section-badge">✨ Platform Features</div>
+        <h2>Everything Your Farm Needs</h2>
+        <p>Smart tools designed for Indian farmers, available in Hindi, Punjabi, Telugu, Marathi, Tamil & English</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon green">🔬</div>
+          <h3>AI Disease Detection</h3>
+          <p>Upload a photo of your crop leaf and get instant disease diagnosis with treatment recommendations. Works
+            with wheat, rice, cotton & more.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon blue">💧</div>
+          <h3>Smart Irrigation</h3>
+          <p>AI-powered irrigation scheduling based on real-time weather, soil data & crop stage. Save water and boost
+            yield by up to 30%.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon orange">📊</div>
+          <h3>Live Mandi Prices</h3>
+          <p>Real-time prices from 450+ mandis across India. AI price forecasts help you sell at the right time for
+            maximum profit.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon green">🛒</div>
+          <h3>Fertilizer Marketplace</h3>
+          <p>Buy fertilizers, pesticides & seeds from verified local sellers at government rates. Compare prices and get
+            doorstep delivery.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon purple">🏛</div>
+          <h3>Govt Scheme Finder</h3>
+          <p>Automatically matches your profile to eligible government schemes. PM-KISAN, crop insurance, subsidies —
+            never miss a benefit.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon red">🚨</div>
+          <h3>SOS Emergency</h3>
+          <p>One-tap emergency button for crop damage, floods, medical emergencies. Shares GPS location with nearest
+            help center instantly.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+      <div class="section-header">
+        <div class="section-badge">📱 Simple & Fast</div>
+        <h2>How Kisan Sarthi Works</h2>
+        <p>Start using in under 2 minutes. No complex setup needed.</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <h3>Sign Up Free</h3>
+          <p>Register with your phone number. Select your state, crop & farm size. Takes 30 seconds.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <h3>Get Daily Advisory</h3>
+          <p>Receive personalized AI recommendations for irrigation, pest control & market timing every morning.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <h3>Scan & Diagnose</h3>
+          <p>Take a photo of any diseased crop leaf. Get instant AI diagnosis with treatment in your language.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <h3>Sell at Best Price</h3>
+          <p>Check live mandi prices, get AI price forecasts, and time your sales for maximum profit.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials" id="testimonials">
+      <div class="section-header">
+        <div class="section-badge">👨‍🌾 Farmer Stories</div>
+        <h2>Trusted by Lakhs of Farmers</h2>
+        <p>Real stories from real farmers across India</p>
+      </div>
+      <div class="testimonial-grid">
+        <div class="testimonial-card">
+          <p class="testimonial-text">"Kisan Sarthi saved my wheat crop from yellow rust. I uploaded one photo and got
+            the exact treatment within seconds. Incredible technology!"</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">👨‍🌾</div>
+            <div>
+              <div class="testimonial-name">Amit Kumar</div>
+              <div class="testimonial-loc">📍 Patna, Bihar</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <p class="testimonial-text">"The mandi price alerts helped me earn ₹12,000 extra last season. I sold my
+            soybean at the right time thanks to the AI forecast."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">👩‍🌾</div>
+            <div>
+              <div class="testimonial-name">Sunita Devi</div>
+              <div class="testimonial-loc">📍 Indore, MP</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <p class="testimonial-text">"Even without internet, I use the SMS service to get weather updates and mandi
+            prices. It works perfectly from my basic phone."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">👨‍🌾</div>
+            <div>
+              <div class="testimonial-name">Ramesh Yadav</div>
+              <div class="testimonial-loc">📍 Varanasi, UP</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="download">
+      <h2>Join 5 Lakh+ Smart Farmers Today</h2>
+      <p>Free forever. No hidden charges. Available in 6 languages. Works offline via SMS.</p>
+      <button class="btn-cta" onclick="openAuth('signup')">🌾 Start Using Kisan Sarthi — Free</button>
+    </section>
+
+    <!-- Footer -->
+    <div class="footer-tricolor"><span class="saffron-bar"></span><span class="white-bar"></span><span
+        class="green-bar"></span></div>
+    <footer class="footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
+          <p>Kisan Sarthi — कृषि सारथी<br>AI-powered smart farming platform empowering Indian farmers with technology.
+            Smart · Fast · Reliable.</p>
+        </div>
+        <div>
+          <h4>Platform</h4>
+          <ul>
+            <li><a href="#features">Disease Detection</a></li>
+            <li><a href="#features">Irrigation Advisor</a></li>
+            <li><a href="#features">Mandi Prices</a></li>
+            <li><a href="#features">Marketplace</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Support</h4>
+          <ul>
+            <li><a href="#">Helpline: 1800-123-5472</a></li>
+            <li><a href="#">SMS: 56789</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Contact Us</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Languages</h4>
+          <ul>
+            <li><a href="#">हिन्दी (Hindi)</a></li>
+            <li><a href="#">ਪੰਜਾਬੀ (Punjabi)</a></li>
+            <li><a href="#">తెలుగు (Telugu)</a></li>
+            <li><a href="#">मराठी (Marathi)</a></li>
+            <li><a href="#">தமிழ் (Tamil)</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Kisan Sarthi. Made with ❤️ for Indian Farmers.</span>
+        <span>Privacy · Terms · Accessibility</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ══════════════════ AUTH SCREEN ══════════════════ -->
+  <div id="auth-screen">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
+        <h1>Kisan Sarthi</h1>
+      </div>
+      <p class="auth-tagline">कृषि सारथी — खेत की हर ज़रूरत, अब डिज़िटल साथ</p>
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+        <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+      </div>
+      <div class="auth-form" id="login-form">
+        <button class="btn-google" onclick="handleGoogleSignIn()">
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Sign in with Google
+        </button>
+        <button class="btn-google" id="demo-login-btn" onclick="handleDemoLogin()">🚀 Continue with Demo Account</button>
+        <div class="auth-divider">Or continue with email</div>
+        <div class="input-group">
+          <label>📧 Email Address</label>
+          <input type="email" id="login-email" placeholder="kisan@example.com">
+        </div>
+        <div class="input-group">
+          <label>🔑 Password</label>
+          <input type="password" id="login-password" placeholder="Enter your password">
+        </div>
+        <div class="forgot-password-link">
+          <a href="#" onclick="showForgotPassword()">Forgot Password?</a>
+        </div>
+        <button class="btn-primary" onclick="handleEmailLogin()">🌱 Login</button>
+      </div>
+      <div class="auth-form hidden" id="signup-form">
+        <div class="form-row">
+          <div class="input-group">
+            <label>Full Name</label>
+            <input type="text" id="su-name" placeholder="Rajesh Kumar">
+          </div>
+          <div class="input-group">
+            <label>📧 Email</label>
+            <input type="email" id="su-email" placeholder="kisan@example.com">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="input-group">
+            <label>📱 Phone</label>
+            <input type="tel" id="su-phone" placeholder="9876543210">
+          </div>
+          <div class="input-group">
+            <label>🔑 Password</label>
+            <input type="password" id="su-password" placeholder="Create a password">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="input-group">
+            <label>District</label>
+            <select id="su-district">
+              <option value="">Select District</option>
+              <option>Patna</option>
+              <option>Gaya</option>
+              <option>Nalanda</option>
+              <option>Bhojpur</option>
+              <option>Rohtas</option>
+              <option>Kaimur</option>
+              <option>Buxar</option>
+              <option>Aurangabad</option>
+              <option>Nawada</option>
+              <option>Jehanabad</option>
+              <option>Arwal</option>
+              <option>Munger</option>
+              <option>Jamui</option>
+              <option>Lakhisarai</option>
+              <option>Sheikhpura</option>
+              <option>Begusarai</option>
+              <option>Khagaria</option>
+              <option>Bhagalpur</option>
+              <option>Banka</option>
+              <option>Darbhanga</option>
+              <option>Madhubani</option>
+              <option>Samastipur</option>
+              <option>Muzaffarpur</option>
+              <option>Vaishali</option>
+              <option>Sitamarhi</option>
+              <option>Sheohar</option>
+              <option>East Champaran</option>
+              <option>West Champaran</option>
+              <option>Gopalganj</option>
+              <option>Siwan</option>
+              <option>Saran</option>
+              <option>Purnia</option>
+              <option>Katihar</option>
+              <option>Araria</option>
+              <option>Kishanganj</option>
+              <option>Saharsa</option>
+              <option>Supaul</option>
+              <option>Madhepura</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Block</label>
+            <input type="text" id="su-block" placeholder="Enter Block">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="input-group">
+            <label>Land Size (Kattha)</label>
+            <input type="number" id="su-land" placeholder="e.g. 10">
+          </div>
+          <div class="input-group">
+            <label>Primary Crop</label>
+            <select id="su-crop">
+              <option value="Dhan">Dhan (Paddy)</option>
+              <option value="Gehun">Gehun (Wheat)</option>
+              <option value="Makka">Makka (Maize)</option>
+              <option value="Makhana">Makhana</option>
+              <option value="Sarson">Sarson (Mustard)</option>
+              <option value="Sabzi">Sabzi (Vegetables)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="handleEmailSignup()">🚀 Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ FORGOT PASSWORD SCREEN ══════════════════ -->
+  <div id="forgot-password-screen">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
+        <h1>Kisan Sarthi</h1>
+      </div>
+      <p class="auth-tagline">कृषि सारथी — Password Recovery</p>
+
+      <!-- Step 1: Request Reset -->
+      <div class="auth-form" id="forgot-password-step1">
+        <div class="input-group">
+          <label>📧 Email Address</label>
+          <input type="email" id="forgot-email" placeholder="Enter your registered email">
+        </div>
+        <button class="btn-primary" onclick="requestPasswordReset()">📧 Send Reset Link</button>
+        <div class="auth-back-link">
+          <a href="#" onclick="backToLogin()">← Back to Login</a>
+        </div>
+      </div>
+
+      <!-- Step 2: Enter OTP -->
+      <div class="auth-form hidden" id="forgot-password-step2">
+        <div class="input-group">
+          <label>🔐 Reset Code</label>
+          <input type="text" id="reset-code" placeholder="Enter the 6-digit code sent to your email">
+        </div>
+        <div class="input-group">
+          <label>🔑 New Password</label>
+          <input type="password" id="new-password" placeholder="Create a new password">
+        </div>
+        <div class="input-group">
+          <label>🔑 Confirm Password</label>
+          <input type="password" id="confirm-password" placeholder="Confirm your new password">
+        </div>
+        <button class="btn-primary" onclick="confirmPasswordReset()">🔄 Reset Password</button>
+        <div class="auth-back-link">
+          <a href="#" onclick="backToLogin()">← Back to Login</a>
+        </div>
+      </div>
+
+      <!-- Success Message -->
+      <div class="auth-form hidden" id="forgot-password-success">
+        <div class="success-message">
+          <div class="success-icon">✅</div>
+          <h3>Password Reset Successful!</h3>
+          <p>Your password has been updated successfully. You can now login with your new password.</p>
+          <button class="btn-primary" onclick="backToLogin()">🌱 Go to Login</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ COMPLETE PROFILE SCREEN ══════════════════ -->
+  <div id="complete-profile-screen">
+    <div class="auth-box cp-box">
+      <div class="auth-logo">
+        <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
+        <h1>Kisan Sarthi</h1>
+      </div>
+      <p class="auth-tagline">कृषि सारथी — किसान प्रोफ़ाइल पूरी करें</p>
+      <div class="cp-progress" aria-hidden="true">
+        <span class="cp-step active"></span><span class="cp-step"></span><span class="cp-step"></span>
+      </div>
+      <div class="cp-progress-text">चरण 1/3 — आधारभूत जानकारी</div>
+      <div class="auth-form" id="cp-form">
+        <div class="input-group">
+          <label for="cp-name">👨‍🌾 किसान का नाम</label>
+          <input type="text" id="cp-name" placeholder="पूरा नाम">
+        </div>
+        <div class="input-group">
+          <label for="cp-phone">📱 मोबाइल नंबर</label>
+          <input type="tel" id="cp-phone" maxlength="10" placeholder="10 अंकों का मोबाइल नंबर">
+        </div>
+        <div class="form-row">
+          <div class="input-group">
+            <label for="cp-district">जिला</label>
+            <select id="cp-district"><option value="">जिला चुनें</option></select>
+          </div>
+          <div class="input-group">
+            <label for="cp-block">प्रखंड</label>
+            <input type="text" id="cp-block" list="cp-block-options" placeholder="प्रखंड चुनें या लिखें">
+            <datalist id="cp-block-options"></datalist>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="input-group">
+            <label for="cp-land">भूमि (Kattha)</label>
+            <input type="number" id="cp-land" min="0" step="0.01" placeholder="जैसे 10">
+          </div>
+          <div class="input-group">
+            <label>लगभग Bigha</label>
+            <div class="cp-bigha-preview" id="cp-bigha">0.000 Bigha</div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label for="cp-crop">मुख्य फसल</label>
+          <select id="cp-crop">
+            <option value="">फसल चुनें</option>
+            <option value="Makhana">Makhana (मखाना)</option>
+            <option value="Dhan">Dhan (धान)</option>
+            <option value="Makka">Makka (मक्का)</option>
+          </select>
+        </div>
+        <button class="btn-primary" id="cp-submit" onclick="submitCompleteProfile()">✅ प्रोफ़ाइल पूरी करें</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ MAIN APP ══════════════════ -->
+  <div id="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
+        <div class="brand-text">
+          <span class="brand-name">Kisan Sarthi</span>
+          <span class="brand-hindi">कृषि सारथी</span>
+        </div>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebar-avatar">K</div>
+        <div class="user-info">
+          <div class="name" id="sidebar-name">Farmer</div>
+          <div class="loc" id="sidebar-loc">📍 Bihar</div>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">🏠</span> Dashboard</div>
+        <div class="nav-item" onclick="showPage('disease',this)"><span class="icon">🔬</span> Disease Detection</div>
+        <div class="nav-item" onclick="showPage('trace',this)"><span class="icon">🔳</span> Farm-to-Fork QR</div>
+        <div class="nav-item" onclick="showPage('weather',this)"><span class="icon">💧</span> Irrigation Advice</div>
+        <div class="nav-item" onclick="showPage('market',this)"><span class="icon">🛒</span> Fertilizer Market</div>
+        <div class="nav-item" onclick="showPage('mandi',this)"><span class="icon">📊</span> Mandi Prices</div>
+        <div class="nav-item" onclick="showPage('schemes',this)"><span class="icon">🏛</span> Govt Schemes</div>
+        <div class="nav-item" onclick="showPage('community',this)"><span class="icon">👥</span> Community</div>
+        <div class="nav-item" onclick="showPage('tools',this)"><span class="icon">🚜</span> Tool Sharing</div>
+        <div class="nav-item" onclick="showPage('offline',this)"><span class="icon">📶</span> SMS / IVR Access</div>
+        <div class="nav-item" onclick="showPage('sos',this)"><span class="icon">🚨</span> SOS Emergency <span
+            class="nav-badge">!</span></div>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="nav-item" onclick="logout()"><span class="icon">🚪</span> Logout</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h2 id="page-title">Dashboard</h2>
+          <p id="page-sub">Good morning, Farmer 🌤</p>
+        </div>
+        <div class="topbar-right">
+          <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"
+            style="display:none;" id="mobile-menu-btn">☰</button>
+          <select class="lang-select" id="lang-select" onchange="changeLang(this.value)">
+            <option value="en">🇮🇳 English</option>
+            <option value="hi">हिन्दी</option>
+            <option value="pa">ਪੰਜਾਬੀ</option>
+            <option value="te">తెలుగు</option>
+            <option value="mr">मराठी</option>
+            <option value="ta">தமிழ்</option>
+          </select>
+          <button class="sos-btn" onclick="showPage('sos',null)">🚨 SOS</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <!-- DASHBOARD -->
+        <div class="page active" id="page-dashboard">
+          <div class="stats-grid">
+            <div class="stat-card" data-icon="🌾">
+              <div class="stat-label">Crop Health Score</div>
+              <div class="stat-value">87%</div>
+              <div class="stat-sub">↑ 3% from last week</div>
+            </div>
+            <div class="stat-card" data-icon="💧">
+              <div class="stat-label">Today's Irrigation</div>
+              <div class="stat-value">Skip</div>
+              <div class="stat-sub">Rain expected tomorrow</div>
+            </div>
+            <div class="stat-card" data-icon="📈">
+              <div class="stat-label">Wheat MSP</div>
+              <div class="stat-value">₹2,275</div>
+              <div class="stat-sub">/quintal — stable</div>
+            </div>
+            <div class="stat-card" data-icon="🏛">
+              <div class="stat-label">Eligible Schemes</div>
+              <div class="stat-value">4</div>
+              <div class="stat-sub">₹35,000 available</div>
+            </div>
+          </div>
+          <div class="dashboard-grid">
+            <div class="card">
+              <div class="card-title"><span class="dot"></span> AI Daily Advisory</div>
+              <div class="ai-bubble">
+                <div class="ai-header">
+                  <div class="ai-dot"></div><span>Kisan Sarthi AI</span>
+                </div>
+                <strong id="ai-advisory-title">Today's Recommendations for your crop:</strong><br><br>
+                🌡️ Temperature forecast: 28–34°C — within safe range for grain filling stage.<br>
+                💧 <strong>Skip irrigation today</strong> — 12mm rainfall expected in next 36 hrs.<br>
+                🐛 Watch for <strong>aphid activity</strong> — humid conditions increase risk. Scout fields early
+                morning.<br>
+                🌾 Wheat is at <strong>boot stage</strong> — ensure no moisture stress for next 10 days.<br>
+                📦 Consider applying <strong>potash top-dressing</strong> within 5 days.
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom:18px;">
+                <div class="card-title"><span class="dot"></span> Quick Actions</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <button class="btn-primary" style="text-align:left;padding:11px 14px;"
+                    onclick="showPage('disease',null)">🔬 Upload Crop Photo</button>
+                  <button class="btn-primary"
+                    style="text-align:left;padding:11px 14px;background:linear-gradient(135deg,var(--sky),var(--sky-light));"
+                    onclick="showPage('weather',null)">💧 Check Irrigation Need</button>
+                  <button class="btn-primary"
+                    style="text-align:left;padding:11px 14px;background:linear-gradient(135deg,var(--accent),var(--accent-light));"
+                    onclick="showPage('mandi',null)">📊 View Today's Rates</button>
+                  <button class="btn-primary"
+                    style="text-align:left;padding:11px 14px;background:linear-gradient(135deg,var(--earth),var(--earth-light));"
+                    onclick="showPage('schemes',null)">🏛 Govt Schemes</button>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-title"><span class="dot"></span> Weather Snapshot</div>
+                <div style="font-size:44px;text-align:center;margin:6px 0;">🌤️</div>
+                <div style="text-align:center;font-size:32px;font-weight:800;color:var(--sky);">32°C</div>
+                <div style="text-align:center;color:var(--text-muted);font-size:12px;margin-top:3px;">Patna, Bihar ·
+                  Partly Cloudy</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;">
+                  <div
+                    style="text-align:center;padding:8px;background:var(--primary-pale);border-radius:8px;font-size:11px;">
+                    💨 18 km/h<br><span style="color:var(--text-muted)">Wind</span></div>
+                  <div
+                    style="text-align:center;padding:8px;background:var(--primary-pale);border-radius:8px;font-size:11px;">
+                    💧 62%<br><span style="color:var(--text-muted)">Humidity</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DISEASE DETECTION -->
+        <div class="page" id="page-disease">
+          <div class="section-title">🔬 AI Crop Disease Detection</div>
+          <p class="section-sub">Upload a photo of your crop leaf for instant AI-powered disease diagnosis</p>
+          <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+            <div class="upload-icon" id="upload-icon">📸</div>
+            <h3>Click to Upload Crop Photo</h3>
+            <p>Supports JPG, PNG · Max 10MB · Wheat, Rice, Cotton, Tomato supported</p>
+            <input type="file" id="file-input" accept="image/*" onchange="handleImageUpload(event)">
+          </div>
+          <img id="preview-img" class="preview-img" style="display:none;">
+          <div id="disease-loading" class="loading" style="display:none;">
+            <div class="spinner"></div> Analyzing crop with Kisan Sarthi AI…
+          </div>
+          <div id="disease-result" style="display:none;"></div>
+          <div class="card" style="margin-top:20px;">
+            <div class="card-title"><span class="dot"></span> Common Diseases This Season</div>
+            <div
+              style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:8px;">
+              <div
+                style="padding:14px;background:var(--primary-pale);border-radius:10px;border-left:4px solid var(--red);">
+                <strong style="font-size:13px;">🍂 Yellow Rust</strong><br><small style="color:var(--text-muted);">Wheat
+                  · High Risk</small>
+              </div>
+              <div
+                style="padding:14px;background:var(--primary-pale);border-radius:10px;border-left:4px solid var(--accent);">
+                <strong style="font-size:13px;">🦠 Blast Disease</strong><br><small
+                  style="color:var(--text-muted);">Rice · Medium Risk</small>
+              </div>
+              <div
+                style="padding:14px;background:var(--primary-pale);border-radius:10px;border-left:4px solid var(--primary);">
+                <strong style="font-size:13px;">🐛 Bollworm</strong><br><small style="color:var(--text-muted);">Cotton ·
+                  Low Risk</small>
+              </div>
+              <div
+                style="padding:14px;background:var(--primary-pale);border-radius:10px;border-left:4px solid var(--accent);">
+                <strong style="font-size:13px;">🌿 Leaf Spot</strong><br><small style="color:var(--text-muted);">Tomato
+                  · Medium Risk</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="page-trace">
+          <div class="section-title">🔳 Farm-to-Fork QR Generator</div>
+          <p class="section-sub">Generate a consumer-facing QR code with farm location, harvest date, and disease
+            detection health logs.</p>
+          <div class="card">
+            <div class="card-title"><span class="dot"></span> Produce Details</div>
+            <div class="trace-form-grid">
+              <div class="input-group">
+                <label>Produce Name</label>
+                <input type="text" id="ftf-produce" placeholder="e.g. Organic Wheat">
+              </div>
+              <div class="input-group">
+                <label>Crop</label>
+                <input type="text" id="ftf-crop" placeholder="Wheat">
+              </div>
+              <div class="input-group">
+                <label>Farm Location</label>
+                <input type="text" id="ftf-location" placeholder="Village, District, State">
+              </div>
+              <div class="input-group">
+                <label>Harvest Date</label>
+                <input type="date" id="ftf-harvest">
+              </div>
+            </div>
+            <button class="btn-primary" onclick="generateFarmTraceQr()">Generate Farm-to-Fork QR</button>
+            <div id="ftf-status" class="trace-status"></div>
+          </div>
+
+          <div class="card trace-result-card" id="ftf-result" style="display:none;">
+            <div class="card-title"><span class="dot"></span> Shareable QR</div>
+            <div class="trace-result-grid">
+              <div class="trace-qr-wrap">
+                <img id="ftf-qr-image" alt="Farm Trace QR">
+              </div>
+              <div>
+                <div class="trace-link-label">Consumer verification link</div>
+                <a id="ftf-public-link" class="trace-public-link" target="_blank" rel="noopener noreferrer"></a>
+                <button class="btn-apply" onclick="copyTraceLink()" style="margin-top:12px;">Copy Link</button>
+                <div class="trace-summary" id="ftf-summary"></div>
+              </div>
+            </div>
+            <div style="margin-top:16px;">
+              <div class="card-title"><span class="dot"></span> Logs Included in QR Proof</div>
+              <div id="ftf-log-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- WEATHER / IRRIGATION -->
+        <div class="page" id="page-weather">
+          <div class="section-title">💧 Smart Irrigation Advisor</div>
+          <p class="section-sub">AI-powered irrigation decisions based on real-time weather and soil data</p>
+          <div class="weather-hero">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+              <div>
+                <div style="font-size:13px;opacity:0.8;margin-bottom:4px;">📍 Patna, Bihar · Live</div>
+                <div class="weather-temp">32°C</div>
+                <div style="font-size:16px;margin-top:6px;opacity:0.9;">☁️ Partly Cloudy</div>
+                <div style="font-size:12px;opacity:0.7;margin-top:4px;">Feels like 36°C · UV Index: High</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:12px;opacity:0.7;margin-bottom:6px;">5-Day Forecast</div>
+                <div style="display:flex;gap:10px;">
+                  <div
+                    style="text-align:center;background:rgba(255,255,255,0.15);padding:8px;border-radius:8px;font-size:12px;">
+                    <div>Mon</div>
+                    <div>🌤</div>
+                    <div>33°</div>
+                  </div>
+                  <div
+                    style="text-align:center;background:rgba(255,255,255,0.15);padding:8px;border-radius:8px;font-size:12px;">
+                    <div>Tue</div>
+                    <div>🌧</div>
+                    <div>28°</div>
+                  </div>
+                  <div
+                    style="text-align:center;background:rgba(255,255,255,0.15);padding:8px;border-radius:8px;font-size:12px;">
+                    <div>Wed</div>
+                    <div>⛅</div>
+                    <div>30°</div>
+                  </div>
+                  <div
+                    style="text-align:center;background:rgba(255,255,255,0.15);padding:8px;border-radius:8px;font-size:12px;">
+                    <div>Thu</div>
+                    <div>☀️</div>
+                    <div>35°</div>
+                  </div>
+                  <div
+                    style="text-align:center;background:rgba(255,255,255,0.15);padding:8px;border-radius:8px;font-size:12px;">
+                    <div>Fri</div>
+                    <div>☀️</div>
+                    <div>37°</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="weather-grid">
+            <div class="weather-stat">
+              <div class="ws-icon">💧</div>
+              <div class="ws-val">62%</div>
+              <div class="ws-label">Humidity</div>
+            </div>
+            <div class="weather-stat">
+              <div class="ws-icon">🌧</div>
+              <div class="ws-val">12mm</div>
+              <div class="ws-label">Rain Tomorrow</div>
+            </div>
+            <div class="weather-stat">
+              <div class="ws-icon">💨</div>
+              <div class="ws-val">18 km/h</div>
+              <div class="ws-label">Wind Speed</div>
+            </div>
+            <div class="weather-stat">
+              <div class="ws-icon">🌱</div>
+              <div class="ws-val">24°C</div>
+              <div class="ws-label">Soil Temp</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="dot"></span> AI Irrigation Recommendations</div>
+            <div class="advice-list">
+              <div class="advice-item">
+                <div class="advice-icon">🚫</div>
+                <div>
+                  <h4>SKIP Irrigation Today & Tomorrow</h4>
+                  <p>12mm rainfall forecast for Tuesday. Save 2–3 hours of pump operation = ₹180–270 savings.</p>
+                </div>
+              </div>
+              <div class="advice-item">
+                <div class="advice-icon">⏰</div>
+                <div>
+                  <h4>Next Irrigation: Wednesday 5:30 AM</h4>
+                  <p>After rain passes, wheat needs light irrigation (3–4 hours) Wednesday morning.</p>
+                </div>
+              </div>
+              <div class="advice-item">
+                <div class="advice-icon">🌾</div>
+                <div>
+                  <h4>Crop Stage: Boot Stage (Critical Period)</h4>
+                  <p>Do not allow moisture stress during grain filling (next 15 days).</p>
+                </div>
+              </div>
+              <div class="advice-item">
+                <div class="advice-icon">⚡</div>
+                <div>
+                  <h4>Peak Efficiency: 5–7 AM</h4>
+                  <p>Irrigate only in early morning to minimize evaporation losses.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FERTILIZER MARKETPLACE -->
+        <div class="page" id="page-market">
+          <div class="section-title">🛒 Local Fertilizer Marketplace</div>
+          <p class="section-sub">Buy inputs directly from verified local sellers — best prices guaranteed</p>
+          <div class="card" style="margin-bottom:18px;">
+            <div class="card-title"><span class="dot"></span> Smart Fertilizer Calculator (Soil Based)</div>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Khet ka size aur soil test levels
+              dalo. AI Sarthi exact quantity batayega — paise bhi bachao, mitti bhi bachao.</p>
+            <div class="fert-calc-grid">
+              <div class="input-group">
+                <label>Field Size (acres)</label>
+                <input id="fert-area" type="number" min="0.1" step="0.1" value="1" placeholder="e.g. 2.5">
+              </div>
+              <div class="input-group">
+                <label>Crop</label>
+                <select id="fert-crop">
+                  <option value="wheat">Wheat</option>
+                  <option value="rice">Rice/Paddy</option>
+                  <option value="cotton">Cotton</option>
+                  <option value="tomato">Tomato</option>
+                  <option value="maize">Maize</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label>Soil Nitrogen (N)</label>
+                <select id="fert-n">
+                  <option value="low">Low</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label>Soil Phosphorus (P)</label>
+                <select id="fert-p">
+                  <option value="low">Low</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label>Soil Potassium (K)</label>
+                <select id="fert-k">
+                  <option value="low">Low</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="calculateSmartFertilizer()">Calculate Exact Dose</button>
+            <div id="fert-calc-result" class="fert-calc-result"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+            <input type="text" placeholder="🔍 Search fertilizers, pesticides…"
+              style="flex:1;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;min-width:200px;outline:none;background:var(--bg);">
+            <select
+              style="padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:#fff;outline:none;">
+              <option>📍 5 km</option>
+              <option>10 km</option>
+              <option>25 km</option>
+              <option>50 km</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <button class="filter-btn active" onclick="toggleFilter('All')">All</button>
+            <button class="filter-btn" onclick="toggleFilter('Fertilizers')">Fertilizers</button>
+            <button class="filter-btn" onclick="toggleFilter('Pesticides')">Pesticides</button>
+            <button class="filter-btn" onclick="toggleFilter('Seeds')">Seeds</button>
+            <button class="filter-btn" onclick="toggleFilter('Organic')">Organic</button>
+            <button class="filter-btn" onclick="toggleFilter('Government Rate')">Government Rate</button>
+          </div>
+          <div class="market-grid" id="market-grid"></div>
+        </div>
+
+        <!-- MANDI PRICES -->
+        <div class="page" id="page-mandi">
+          <div class="section-title">📊 Mandi Price Intelligence</div>
+          <p class="section-sub">Real-time crop prices from 450+ mandis · Updated every hour</p>
+          <div class="tabs">
+            <button class="tab active" onclick="filterMandi('all',this)">All Crops</button>
+            <button class="tab" onclick="filterMandi('grains',this)">Grains</button>
+            <button class="tab" onclick="filterMandi('pulses',this)">Pulses</button>
+            <button class="tab" onclick="filterMandi('oilseeds',this)">Oilseeds</button>
+            <button class="tab" onclick="filterMandi('vegetables',this)">Vegetables</button>
+          </div>
+          <div class="card" style="overflow-x:auto;">
+            <table class="price-table">
+              <thead>
+                <tr>
+                  <th>Crop</th>
+                  <th>Mandi</th>
+                  <th>Today's Price</th>
+                  <th>MSP</th>
+                  <th>Change</th>
+                  <th>Trend</th>
+                </tr>
+              </thead>
+              <tbody id="mandi-tbody"></tbody>
+            </table>
+          </div>
+          <div class="card" style="margin-top:20px;">
+            <div class="card-title"><span class="dot"></span> AI Price Forecast</div>
+            <div class="ai-bubble">
+              <div class="ai-header">
+                <div class="ai-dot"></div><span>Price Intelligence</span>
+              </div>
+              📈 <strong>Wheat</strong> prices expected to rise 3–5% in next 2 weeks due to export demand.<br>
+              📉 <strong>Onion</strong> arrivals from Nashik are high — prices may dip 8–12%.<br>
+              💡 <strong>Recommendation:</strong> Hold wheat for 10–14 days. Sell vegetables immediately.
+            </div>
+          </div>
+        </div>
+
+        <!-- GOVT SCHEMES -->
+        <div class="page" id="page-schemes">
+          <div class="section-title">🏛 Government Scheme Finder</div>
+          <p class="section-sub">Schemes matched to your profile — Bihar, Wheat Farmer</p>
+          <div class="card"
+            style="margin-bottom:20px;background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border-color:#FDE68A;">
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+              <div style="font-size:32px;">✅</div>
+              <div style="flex:1;">
+                <div style="font-weight:700;font-size:15px;">You are eligible for 4 schemes totalling ₹35,000+</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Based on your profile: Bihar ·
+                  Wheat · 3 acres · Annual income &lt;₹2L</div>
+              </div>
+              <button class="btn-apply" style="white-space:nowrap;">Apply All</button>
+            </div>
+          </div>
+          <div id="schemes-list"></div>
+        </div>
+
+        <!-- COMMUNITY FORUM -->
+        <div class="page" id="page-community">
+          <div class="section-title">👥 Kisan Community — किसान समुदाय</div>
+          <p class="section-sub">Ask questions, share experience, help fellow farmers across India</p>
+
+          <!-- Community Stats Bar -->
+          <div class="community-stats-bar" id="community-stats-bar">
+            <div class="comm-stat-pill"><span class="comm-stat-icon">💬</span><span class="comm-stat-val"
+                id="cs-posts">0</span><span class="comm-stat-label">Posts</span></div>
+            <div class="comm-stat-pill"><span class="comm-stat-icon">💡</span><span class="comm-stat-val"
+                id="cs-replies">0</span><span class="comm-stat-label">Replies</span></div>
+            <div class="comm-stat-pill solved"><span class="comm-stat-icon">✅</span><span class="comm-stat-val"
+                id="cs-solved">0</span><span class="comm-stat-label">Solved</span></div>
+          </div>
+
+          <!-- New Post Card -->
+          <div class="card community-create-card" id="community-create-card">
+            <div class="card-title"><span class="dot"></span> Ask a Question / Share Knowledge</div>
+            <div class="community-form">
+              <input type="text" id="cp-title"
+                placeholder="✍️ Question title — e.g. 'Wheat mein yellow spots ka ilaaj?'" class="comm-input-title">
+              <textarea id="cp-desc" rows="3"
+                placeholder="Describe in detail... What crop? What symptoms? Photos? Location?"
+                class="comm-input-desc"></textarea>
+              <div class="comm-form-row">
+                <select id="cp-category" class="comm-select">
+                  <option value="General">🌾 General</option>
+                  <option value="Disease">🔬 Disease</option>
+                  <option value="Fertilizer">🧪 Fertilizer</option>
+                  <option value="Pest Control">🐛 Pest Control</option>
+                  <option value="Irrigation">💧 Irrigation</option>
+                  <option value="Scheme">🏛 Scheme</option>
+                  <option value="Market">📊 Market</option>
+                </select>
+                <select id="cp-crop" class="comm-select">
+                  <option value="">Any Crop</option>
+                  <option value="Wheat">🌾 Wheat</option>
+                  <option value="Rice/Paddy">🌾 Rice/Paddy</option>
+                  <option value="Cotton">🧵 Cotton</option>
+                  <option value="Tomato">🍅 Tomato</option>
+                  <option value="Sugarcane">🌿 Sugarcane</option>
+                  <option value="Soybean">🫘 Soybean</option>
+                  <option value="Maize">🌽 Maize</option>
+                  <option value="Vegetables">🥦 Vegetables</option>
+                </select>
+                <button class="btn-primary comm-post-btn" onclick="createCommunityPost()">📤 Post Question</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filters & Sort -->
+          <div class="comm-controls">
+            <div class="comm-filters" id="comm-filters">
+              <button class="filter-btn active" onclick="filterCommunity('All', this)">All</button>
+              <button class="filter-btn" onclick="filterCommunity('Disease', this)">🔬 Disease</button>
+              <button class="filter-btn" onclick="filterCommunity('Fertilizer', this)">🧪 Fertilizer</button>
+              <button class="filter-btn" onclick="filterCommunity('Pest Control', this)">🐛 Pest</button>
+              <button class="filter-btn" onclick="filterCommunity('Irrigation', this)">💧 Irrigation</button>
+              <button class="filter-btn" onclick="filterCommunity('Scheme', this)">🏛 Scheme</button>
+              <button class="filter-btn" onclick="filterCommunity('Market', this)">📊 Market</button>
+            </div>
+            <div class="comm-sort">
+              <select id="comm-sort-select" onchange="sortCommunity(this.value)">
+                <option value="latest">🕐 Latest</option>
+                <option value="popular">🔥 Most Popular</option>
+                <option value="solved">✅ Solved</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Posts List -->
+          <div id="community-posts-list" class="community-posts-list">
+            <div class="comm-loading">
+              <div class="spinner"></div> Loading community posts...
+            </div>
+          </div>
+
+          <!-- Post Detail View (hidden by default) -->
+          <div id="community-detail" class="community-detail" style="display:none;">
+            <button class="comm-back-btn" onclick="closeCommunityDetail()">← Back to Community</button>
+            <div id="community-detail-content"></div>
+          </div>
+        </div>
+
+        <div class="page" id="page-tools">
+          <div class="section-title">🚜 Crop Swap & Tool Sharing</div>
+          <p class="section-sub">Uber for tractors: list your machine, accept nearby requests, and track job status in
+            real time.</p>
+
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-title"><span class="dot"></span> AI Sarthi Match Alerts</div>
+            <div id="tool-ai-alerts" class="tool-alert-list">
+              <div class="trace-empty">Loading nearby tool alerts...</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-title"><span class="dot"></span> List Your Tool</div>
+            <div class="tool-form-grid">
+              <div class="input-group"><label>Owner Name</label><input id="tool-owner-name" type="text"
+                  placeholder="e.g. Deepak Singh"></div>
+              <div class="input-group"><label>Owner Phone</label><input id="tool-owner-phone" type="tel"
+                  placeholder="10-digit mobile"></div>
+              <div class="input-group"><label>Tool Type</label>
+                <select id="tool-type">
+                  <option>Tractor</option>
+                  <option>Harvester</option>
+                  <option>Rotavator</option>
+                  <option>Seeder</option>
+                  <option>Sprayer</option>
+                  <option>Thresher</option>
+                </select>
+              </div>
+              <div class="input-group"><label>Tool Name</label><input id="tool-name" type="text"
+                  placeholder="Mahindra 575 DI"></div>
+              <div class="input-group"><label>Price / Hour (₹)</label><input id="tool-price" type="number" min="50"
+                  step="10" placeholder="500"></div>
+              <div class="input-group"><label>Location</label><input id="tool-location" type="text"
+                  placeholder="Village, District"></div>
+              <div class="input-group"><label>State</label><input id="tool-state" type="text" placeholder="Bihar"></div>
+              <div class="input-group"><label>Available From</label><input id="tool-from" type="time" value="06:00">
+              </div>
+              <div class="input-group"><label>Available To</label><input id="tool-to" type="time" value="20:00"></div>
+            </div>
+            <div class="input-group" style="margin-top:10px;">
+              <label>Notes</label>
+              <input id="tool-notes" type="text" placeholder="Fuel extra / driver available / minimum 2 hours">
+            </div>
+            <button class="btn-primary" onclick="createToolListing()">List Tool for Rent</button>
+          </div>
+
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-title"><span class="dot"></span> Available Machines Nearby</div>
+            <div id="tool-listings" class="tool-listings-grid">
+              <div class="trace-empty">Loading available machines...</div>
+            </div>
+          </div>
+
+          <div class="tool-booking-grid">
+            <div class="card">
+              <div class="card-title"><span class="dot"></span> Incoming Requests (Owner)</div>
+              <div id="tool-incoming-bookings">
+                <div class="trace-empty">No incoming requests yet.</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="dot"></span> My Requests (Renter)</div>
+              <div id="tool-outgoing-bookings">
+                <div class="trace-empty">No outgoing requests yet.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OFFLINE / IVR -->
+        <div class="page" id="page-offline">
+          <div class="section-title">📶 Offline SMS + IVR Access</div>
+          <p class="section-sub">Full Kisan Sarthi features via SMS and phone call — no internet needed</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+            <div class="card">
+              <div class="card-title"><span class="dot"></span> 📱 SMS Commands</div>
+              <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Send SMS to <strong>56789</strong>
+                (Toll-Free)</p>
+              <div class="sms-demo">
+                <div class="sms-comment"># Check weather</div>
+                <div class="sms-in">➤ WEATHER LUDHIANA</div>
+                <div class="sms-out">◀ 32°C Partly Cloudy. Skip irrigation today. Rain 12mm expected Tue.</div><br>
+                <div class="sms-comment"># Get mandi price</div>
+                <div class="sms-in">➤ PRICE WHEAT LUDHIANA</div>
+                <div class="sms-out">◀ Wheat @ Patna Mandi: ₹2,290/qtl. MSP: ₹2,275. +0.66%</div><br>
+                <div class="sms-comment"># SOS</div>
+                <div class="sms-in">➤ SOS</div>
+                <div class="sms-out">◀ Emergency registered. Nearest Kisan Helpline called.</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="dot"></span> 📞 IVR Helpline: 1800-123-KISAN</div>
+              <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Free 24x7 voice service in 6
+                languages</p>
+              <div class="ivr-flow">
+                <div class="ivr-step">
+                  <div class="ivr-num">1</div>
+                  <div>
+                    <h4>Call 1800-123-5472</h4>
+                    <p>Toll-free from any phone, 24×7.</p>
+                  </div>
+                </div>
+                <div class="ivr-connector"></div>
+                <div class="ivr-step">
+                  <div class="ivr-num">2</div>
+                  <div>
+                    <h4>Select Language</h4>
+                    <p>1 Hindi · 2 Punjabi · 3 Telugu · 4 Marathi · 5 Tamil · 6 English</p>
+                  </div>
+                </div>
+                <div class="ivr-connector"></div>
+                <div class="ivr-step">
+                  <div class="ivr-num">3</div>
+                  <div>
+                    <h4>Choose Service</h4>
+                    <p>1 Weather · 2 Mandi · 3 Disease · 4 Schemes · 5 SOS</p>
+                  </div>
+                </div>
+                <div class="ivr-connector"></div>
+                <div class="ivr-step">
+                  <div class="ivr-num">4</div>
+                  <div>
+                    <h4>Get Personalized Info</h4>
+                    <p>AI voice response in your language.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="dot"></span> Supported Languages</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+              <div style="padding:10px 18px;background:var(--primary-pale);border-radius:10px;text-align:center;">
+                <div style="font-weight:700;font-size:14px;">हिन्दी</div>
+                <div style="font-size:11px;color:var(--text-muted);">Hindi</div>
+              </div>
+              <div style="padding:10px 18px;background:var(--primary-pale);border-radius:10px;text-align:center;">
+                <div style="font-weight:700;font-size:14px;">ਪੰਜਾਬੀ</div>
+                <div style="font-size:11px;color:var(--text-muted);">Punjabi</div>
+              </div>
+              <div style="padding:10px 18px;background:var(--primary-pale);border-radius:10px;text-align:center;">
+                <div style="font-weight:700;font-size:14px;">తెలుగు</div>
+                <div style="font-size:11px;color:var(--text-muted);">Telugu</div>
+              </div>
+              <div style="padding:10px 18px;background:var(--primary-pale);border-radius:10px;text-align:center;">
+                <div style="font-weight:700;font-size:14px;">मराठी</div>
+                <div style="font-size:11px;color:var(--text-muted);">Marathi</div>
+              </div>
+              <div style="padding:10px 18px;background:var(--primary-pale);border-radius:10px;text-align:center;">
+                <div style="font-weight:700;font-size:14px;">தமிழ்</div>
+                <div style="font-size:11px;color:var(--text-muted);">Tamil</div>
+              </div>
+              <div style="padding:10px 18px;background:var(--primary-pale);border-radius:10px;text-align:center;">
+                <div style="font-weight:700;font-size:14px;">English</div>
+                <div style="font-size:11px;color:var(--text-muted);">English</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SOS -->
+        <div class="page" id="page-sos">
+          <div class="section-title">🚨 SOS Emergency System</div>
+          <p class="section-sub">Instant emergency assistance for farmers — 24×7 response</p>
+          <div class="sos-hero">
+            <h2 style="font-size:24px;margin-bottom:6px;">Emergency? Press the button.</h2>
+            <p style="opacity:0.8;font-size:13px;margin-bottom:24px;">Your GPS location will be shared with nearest help
+              center</p>
+            <button class="sos-big-btn" onclick="activateSOS()">🆘</button>
+            <p style="opacity:0.7;font-size:12px;">Hold 3 seconds for silent SOS · Tap for voice call</p>
+          </div>
+          <div class="sos-contacts">
+            <div class="contact-card">
+              <div class="contact-icon">👨‍🌾</div>
+              <div class="contact-name">Kisan Helpline</div>
+              <div class="contact-num">1551</div>
+              <div class="contact-desc">Crop & farming help</div>
+            </div>
+            <div class="contact-card">
+              <div class="contact-icon">🏥</div>
+              <div class="contact-name">Medical Emergency</div>
+              <div class="contact-num">108</div>
+              <div class="contact-desc">Ambulance service</div>
+            </div>
+            <div class="contact-card">
+              <div class="contact-icon">🌊</div>
+              <div class="contact-name">Flood / Disaster</div>
+              <div class="contact-num">1070</div>
+              <div class="contact-desc">NDRF helpline</div>
+            </div>
+            <div class="contact-card">
+              <div class="contact-icon">🐂</div>
+              <div class="contact-name">Animal Emergency</div>
+              <div class="contact-num">1962</div>
+              <div class="contact-desc">Veterinary help</div>
+            </div>
+            <div class="contact-card">
+              <div class="contact-icon">🚓</div>
+              <div class="contact-name">Police</div>
+              <div class="contact-num">100</div>
+              <div class="contact-desc">Law & order</div>
+            </div>
+            <div class="contact-card">
+              <div class="contact-icon">🔥</div>
+              <div class="contact-name">Fire Brigade</div>
+              <div class="contact-num">101</div>
+              <div class="contact-desc">Fire emergency</div>
+            </div>
+            <div class="contact-card">
+              <div class="contact-icon">🌾</div>
+              <div class="contact-name">Crop Insurance</div>
+              <div class="contact-num">14447</div>
+              <div class="contact-desc">PMFBY claims</div>
+            </div>
+            <div class="contact-card">
+              <div class="contact-icon">💊</div>
+              <div class="contact-name">Pesticide Poison</div>
+              <div class="contact-num">1800-11-6666</div>
+              <div class="contact-desc">Poison control</div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:20px;">
+            <div class="card-title"><span class="dot"></span> Report Incident</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+              <div class="input-group"><label>Incident Type</label>
+                <select
+                  style="padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:#fff;outline:none;">
+                  <option>Crop Damage</option>
+                  <option>Flood</option>
+                  <option>Fire</option>
+                  <option>Animal Attack</option>
+                  <option>Medical</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="input-group"><label>Severity</label>
+                <select
+                  style="padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:#fff;outline:none;">
+                  <option>🔴 Critical</option>
+                  <option>🟡 Urgent</option>
+                  <option>🟢 Moderate</option>
+                </select>
+              </div>
+            </div>
+            <div class="input-group" style="margin-bottom:14px;"><label>Description</label>
+              <input type="text" placeholder="Briefly describe the situation…">
+            </div>
+            <button class="btn-primary" style="background:linear-gradient(135deg,var(--red),var(--red-light));"
+              onclick="submitReport()">📡 Submit Emergency Report</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- AI Chat Widget -->
+  <div id="ai-chat-widget" class="chat-widget">
+    <button class="chat-fab" id="chat-fab" onclick="toggleChat()">
+      <span class="fab-icon">🤖</span>
+      <span class="fab-text">AI सारथी</span>
+    </button>
+    <div class="chat-panel" id="chat-panel">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <div class="chat-avatar">🤖</div>
+          <div>
+            <div class="chat-title">Kisan Sarthi AI</div>
+            <div class="chat-status"><span class="online-dot"></span> <span id="voice-status-text">Online · कृषि
+                सारथी</span></div>
+          </div>
+        </div>
+        <div class="chat-header-actions">
+          <select class="voice-lang-select" id="voice-lang" onchange="changeVoiceLang(this.value)"
+            title="Voice Language">
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="bho">🔶 भोजपुरी</option>
+            <option value="mai">🔷 मैथिली</option>
+          </select>
+          <button class="chat-close" onclick="toggleChat()">✕</button>
+        </div>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-msg bot">
+          <div class="msg-avatar">🤖</div>
+          <div class="msg-bubble">
+            <strong>🙏 Namaste!</strong> I'm your Kisan Sarthi AI Assistant.<br><br>
+            Ask me anything about farming — diseases, fertilizers, irrigation, schemes, mandi prices & more!<br><br>
+            🎤 <em>Tap the mic button to ask by voice in Hindi, English, Bhojpuri or Maithili!</em>
+            <button class="btn-speak-msg" onclick="speakText(this.closest('.msg-bubble').innerText)"
+              title="Listen 🔊">🔊</button>
+          </div>
+        </div>
+        <div class="chat-suggestions" id="chat-suggestions"></div>
+      </div>
+      <div class="chat-input-area">
+        <button class="voice-btn" id="voice-btn" onclick="toggleVoiceInput()" title="Voice Input 🎤">
+          <span id="voice-icon">🎤</span>
+        </button>
+        <input type="text" id="chat-input" placeholder="Ask or tap 🎤 to speak…"
+          onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" onclick="sendChat()">➤</button>
+      </div>
+      <div class="voice-indicator" id="voice-indicator">
+        <div class="voice-waves">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="voice-label" id="voice-label">Listening… बोलिए</div>
+        <button class="voice-stop" onclick="stopVoiceInput()">⏹ Stop</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase JS (CDN) + Firebase fallback SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="supabase-auth.js"></script>
+  <script src="app.js"></script>
+
+  <!-- Invisible reCAPTCHA container for Phone Auth -->
+  <div id="recaptcha-container"></div>
+</body>
+
+</html>
