@@ -162,7 +162,7 @@ async function authenticate(req, res, next) {
       } else {
         const { data, error } = await supabase
           .from('farmers')
-          .select('id, name, phone, email, district, block, primary_crop, land_size_kattha, role, is_active')
+          .select('id, name, phone, email, district, block, land_size_kattha, primary_crop, role, is_active, state, state_code, district_code, subdistrict_code, village_code')
           .eq('id', decoded.id)
           .single();
 
@@ -214,7 +214,7 @@ async function optionalAuth(req, res, next) {
     if (!user && isConfigured) {
       const { data } = await supabase
         .from('farmers')
-        .select('id, name, phone, email, district, block, primary_crop, role, is_active')
+        .select('id, name, phone, email, district, block, primary_crop, role, is_active, state')
         .eq('id', decoded.id)
         .single();
       if (data && data.is_active !== false) {

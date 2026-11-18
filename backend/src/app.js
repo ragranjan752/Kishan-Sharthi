@@ -22,6 +22,7 @@ const communityRoutes = require('./modules/community/community.routes');
 const miscRoutes = require('./modules/misc/misc.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const demoRoutes = require('./modules/demo/demo.routes');
+const locationRoutes = require('./modules/locations/locations.routes');
 
 const app = express();
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -131,6 +132,7 @@ app.use('/api/v1', toolRoutes);
 app.use('/api/v1', communityRoutes);
 app.use('/api/v1', miscRoutes);
 app.use('/api/v1', adminRoutes);
+app.use('/api/v1/locations', locationRoutes);
 
 // ── 8. Backwards-Compatible Legacy Aliases (/api) ──
 // Ensures existing index.html and app.js frontend functions continue working seamlessly
@@ -143,6 +145,7 @@ app.use('/api', toolRoutes);
 app.use('/api', communityRoutes);
 app.use('/api', miscRoutes);
 app.use('/api', adminRoutes);
+app.use('/api/locations', locationRoutes);
 
 // ── 9. Error Handling & 404 Handlers ──
 app.use(notFoundHandler);

@@ -16,6 +16,8 @@ const crypto = require('crypto');
 const { supabase, isConfigured } = require('../../config/supabase');
 const { admin: firebaseAdmin, isConfigured: isFirebaseConfigured } = require('../../../config/firebase');
 const farmerRepo = require('./farmers.repository');
+const locationsService = require('../locations/locations.service');
+const { BIHAR_DISTRICTS } = require('./farmers.validator');
 const { AppError } = require('../../middleware/errorHandler');
 const { invalidateUserCache } = require('../../middleware/auth');
 const logger = require('../../config/logger');
@@ -29,6 +31,50 @@ const BCRYPT_ROUNDS = 12; // 12 rounds: strong but manageable on low-end servers
 // ════════════════════════════════════
 async function register(validatedData) {
   const { password, ...profileData } = validatedData;
+
+  // ── Resolve pan-India geography (LGD codes → canonical names) ──
+  const hasGeoCodes = Boolean(profileData.state_code || profileData.district_code || profileData.subdistrict_code || profileData.village_code);
+  if (hasGeoCodes && isConfigured) {
+    const geo = await locationsService.resolveGeo({
+      state_code: profileData.state_code,
+      district_code: profileData.district_code,
+      subdistrict_code: profileData.subdistrict_code,
+      village_code: profileData.village_code,
+      village: profileData.village,
+    });
+    // Codes must resolve — reject forged/invalid geography
+    if (profileData.state_code && !geo.state) {
+      throw new AppError('Invalid state selection', 400, 'INVALID_GEO');
+    }
+    if (profileData.district_code && !geo.district) {
+      throw new AppError('Invalid district selection', 400, 'INVALID_GEO');
+    }
+    if (profileData.subdistrict_code && !geo.block) {
+      throw new AppError('Invalid sub-district selection', 400, 'INVALID_GEO');
+    }
+    if (profileData.village_code && !geo.village) {
+      throw new AppError('Invalid village selection', 400, 'INVALID_GEO');
+    }
+    profileData.state = geo.state || profileData.state || null;
+    profileData.district = geo.district || profileData.district || null;
+    profileData.block = geo.block || profileData.block || null;
+    profileData.village = geo.village || profileData.village || null;
+  }
+
+  // ── Location requirement: need district (code-resolved or legacy name) ──
+  if (!profileData.district_code && !profileData.district) {
+    throw new AppError('District is required', 400, 'DISTRICT_REQUIRED');
+  }
+  // Legacy compatibility: name-only districts are still restricted to Bihar
+  if (!profileData.district_code && profileData.district && !BIHAR_DISTRICTS.includes(profileData.district)) {
+    throw new AppError('Please select your district from the location dropdown', 400, 'INVALID_DISTRICT');
+  }
+  profileData.district = profileData.district || 'Not specified';
+  profileData.block = profileData.block || 'Not specified';
+
+  // Agricultural fields are optional at signup (collected via complete-profile)
+  profileData.land_size_kattha = profileData.land_size_kattha || 0;
+  profileData.primary_crop = profileData.primary_crop || 'Dhan';
 
   // Check duplicates before hashing (saves time)
   const existingByEmail = await farmerRepo.findByEmail(profileData.email);
@@ -297,8 +343,26 @@ async function bootstrapProfile(authUser, existingFarmer = null) {
     if (duplicatePhone) phone = null;
   }
 
-  const district = meta.district || 'Not specified';
-  const block = meta.block || 'Not specified';
+  // ── Pan-India geo fields from signup metadata (LGD codes) ──
+  const metaStateCode = parseInt(meta.state_code, 10) || null;
+  const metaDistrictCode = parseInt(meta.district_code, 10) || null;
+  const metaSubdistrictCode = parseInt(meta.subdistrict_code, 10) || null;
+  const metaVillageCode = parseInt(meta.village_code, 10) || null;
+  let geoNames = { state: null, district: null, block: null, village: null };
+  if (isConfigured && (metaStateCode || metaDistrictCode || metaSubdistrictCode || metaVillageCode)) {
+    try {
+      geoNames = await locationsService.resolveGeo({
+        state_code: metaStateCode,
+        district_code: metaDistrictCode,
+        subdistrict_code: metaSubdistrictCode,
+        village_code: metaVillageCode,
+        village: meta.village || null,
+      });
+    } catch { /* geo resolution is best-effort at bootstrap */ }
+  }
+
+  const district = geoNames.district || meta.district || 'Not specified';
+  const block = geoNames.block || meta.block || 'Not specified';
   const landKattha = parseFloat(meta.land_size_kattha) || 0;
   const primaryCrop = meta.primary_crop || 'Dhan';
   const profileCompleted = Boolean(
@@ -317,6 +381,12 @@ async function bootstrapProfile(authUser, existingFarmer = null) {
     phone,
     district,
     block,
+    village: geoNames.village || meta.village || null,
+    state: geoNames.state || meta.state || null,
+    state_code: metaStateCode,
+    district_code: metaDistrictCode,
+    subdistrict_code: metaSubdistrictCode,
+    village_code: metaVillageCode,
     land_size_kattha: landKattha,
     primary_crop: primaryCrop,
     profile_image_url: meta.avatar_url || meta.picture || null,

@@ -52,6 +52,13 @@ const katthaSchema = z
 // ════════════════════════════════════
 //  REGISTER
 // ════════════════════════════════════
+const geoCodeSchema = z
+  .number({ invalid_type_error: 'Invalid geography code' })
+  .int('Geography code must be an integer')
+  .positive('Geography code must be positive')
+  .optional()
+  .nullable();
+
 const registerSchema = z.object({
   name: z
     .string()
@@ -65,22 +72,24 @@ const registerSchema = z.object({
 
   password: passwordSchema,
 
-  district: z
-    .string()
-    .refine((d) => BIHAR_DISTRICTS.includes(d), {
-      message: `District must be one of Bihar's 38 official districts`,
-    }),
+  // -- Pan-India location (LGD codes -- preferred path) --
+  state: z.string().max(150).optional().nullable(),
+  state_code: geoCodeSchema,
+  district_code: geoCodeSchema,
+  subdistrict_code: geoCodeSchema,
+  village_code: geoCodeSchema,
 
-  block: z
-    .string()
-    .min(2, 'Block name required')
-    .max(100, 'Block name too long'),
+  // -- Location names (resolved server-side from codes, or manual entry) --
+  district: z.string().max(150).optional().nullable(),
+  block: z.string().max(150).optional().nullable(),
+  village: z.string().max(200).optional().nullable(),
 
-  land_size_kattha: katthaSchema,
+  // -- Agricultural profile (optional at signup; collected via complete-profile) --
+  land_size_kattha: katthaSchema.optional().nullable(),
 
   primary_crop: z.enum(VALID_CROPS, {
     errorMap: () => ({ message: `Crop must be one of: ${VALID_CROPS.join(', ')}` }),
-  }),
+  }).optional().nullable(),
 
   farmer_category: z
     .enum(FARMER_CATEGORIES, {
@@ -91,6 +100,7 @@ const registerSchema = z.object({
 });
 
 // ════════════════════════════════════
+
 //  LOGIN
 // ════════════════════════════════════
 const loginSchema = z.object({

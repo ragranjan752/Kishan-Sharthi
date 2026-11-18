@@ -303,10 +303,10 @@
       </div>
       <p class="auth-tagline">कृषि सारथी — खेत की हर ज़रूरत, अब डिज़िटल साथ</p>
       <div class="auth-tabs">
-        <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
-        <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+        <button class="auth-tab" onclick="switchAuthTab('login')">Login</button>
+        <button class="auth-tab active" onclick="switchAuthTab('signup')">Sign Up</button>
       </div>
-      <div class="auth-form" id="login-form">
+      <div class="auth-form hidden" id="login-form">
         <button class="btn-google" onclick="handleGoogleSignIn()">
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -316,110 +316,82 @@
           </svg>
           Sign in with Google
         </button>
-        <button class="btn-google" id="demo-login-btn" onclick="handleDemoLogin()">🚀 Continue with Demo Account</button>
         <div class="auth-divider">Or continue with email</div>
         <div class="input-group">
           <label>📧 Email Address</label>
-          <input type="email" id="login-email" placeholder="kisan@example.com">
+          <input type="email" id="login-email" placeholder="Enter email">
         </div>
         <div class="input-group">
           <label>🔑 Password</label>
-          <input type="password" id="login-password" placeholder="Enter your password">
+          <div class="password-wrap">
+            <input type="password" id="login-password" placeholder="Enter your password">
+            <button type="button" class="pw-toggle" onclick="togglePassword('login-password',this)" aria-label="Show password">👁</button>
+          </div>
         </div>
-        <div class="forgot-password-link">
+        <div class="remember-me-row">
+          <label class="remember-me"><input type="checkbox" id="login-remember" checked> Remember me</label>
+          <div class="forgot-password-link">
           <a href="#" onclick="showForgotPassword()">Forgot Password?</a>
+        </div>
         </div>
         <button class="btn-primary" onclick="handleEmailLogin()">🌱 Login</button>
       </div>
-      <div class="auth-form hidden" id="signup-form">
+      <div class="auth-form" id="signup-form">
         <div class="form-row">
           <div class="input-group">
             <label>Full Name</label>
-            <input type="text" id="su-name" placeholder="Rajesh Kumar">
+            <input type="text" id="su-name" placeholder="Enter full name" autocomplete="name">
           </div>
           <div class="input-group">
-            <label>📧 Email</label>
-            <input type="email" id="su-email" placeholder="kisan@example.com">
+            <label>📧 Email Address</label>
+            <input type="email" id="su-email" placeholder="Enter your email address" autocomplete="email">
           </div>
         </div>
         <div class="form-row">
           <div class="input-group">
-            <label>📱 Phone</label>
-            <input type="tel" id="su-phone" placeholder="9876543210">
+            <label>📱 Mobile Number</label>
+            <div class="phone-input-wrap">
+              <span class="phone-prefix">+91</span>
+              <input type="tel" id="su-phone" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric" autocomplete="tel-national">
+            </div>
           </div>
           <div class="input-group">
             <label>🔑 Password</label>
-            <input type="password" id="su-password" placeholder="Create a password">
+            <div class="password-wrap">
+              <input type="password" id="su-password" placeholder="Create password" autocomplete="new-password">
+              <button type="button" class="pw-toggle" onclick="togglePassword('su-password',this)" aria-label="Show password">👁</button>
+            </div>
           </div>
         </div>
         <div class="form-row">
-          <div class="input-group">
+          <div class="input-group geo-group">
+            <label>State / Union Territory</label>
+            <input type="text" id="su-state" class="geo-input" placeholder="Select state / UT" autocomplete="off">
+            <input type="hidden" id="su-state-code">
+            <div class="geo-dropdown hidden" id="su-state-dd"></div>
+          </div>
+          <div class="input-group geo-group">
             <label>District</label>
-            <select id="su-district">
-              <option value="">Select District</option>
-              <option>Patna</option>
-              <option>Gaya</option>
-              <option>Nalanda</option>
-              <option>Bhojpur</option>
-              <option>Rohtas</option>
-              <option>Kaimur</option>
-              <option>Buxar</option>
-              <option>Aurangabad</option>
-              <option>Nawada</option>
-              <option>Jehanabad</option>
-              <option>Arwal</option>
-              <option>Munger</option>
-              <option>Jamui</option>
-              <option>Lakhisarai</option>
-              <option>Sheikhpura</option>
-              <option>Begusarai</option>
-              <option>Khagaria</option>
-              <option>Bhagalpur</option>
-              <option>Banka</option>
-              <option>Darbhanga</option>
-              <option>Madhubani</option>
-              <option>Samastipur</option>
-              <option>Muzaffarpur</option>
-              <option>Vaishali</option>
-              <option>Sitamarhi</option>
-              <option>Sheohar</option>
-              <option>East Champaran</option>
-              <option>West Champaran</option>
-              <option>Gopalganj</option>
-              <option>Siwan</option>
-              <option>Saran</option>
-              <option>Purnia</option>
-              <option>Katihar</option>
-              <option>Araria</option>
-              <option>Kishanganj</option>
-              <option>Saharsa</option>
-              <option>Supaul</option>
-              <option>Madhepura</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <label>Block</label>
-            <input type="text" id="su-block" placeholder="Enter Block">
+            <input type="text" id="su-district" class="geo-input" placeholder="Select district" autocomplete="off" disabled>
+            <input type="hidden" id="su-district-code">
+            <div class="geo-dropdown hidden" id="su-district-dd"></div>
           </div>
         </div>
         <div class="form-row">
-          <div class="input-group">
-            <label>Land Size (Kattha)</label>
-            <input type="number" id="su-land" placeholder="e.g. 10">
+          <div class="input-group geo-group">
+            <label>Sub-district / Block / Tehsil</label>
+            <input type="text" id="su-subdistrict" class="geo-input" placeholder="Select sub-district" autocomplete="off" disabled>
+            <input type="hidden" id="su-subdistrict-code">
+            <div class="geo-dropdown hidden" id="su-subdistrict-dd"></div>
           </div>
-          <div class="input-group">
-            <label>Primary Crop</label>
-            <select id="su-crop">
-              <option value="Dhan">Dhan (Paddy)</option>
-              <option value="Gehun">Gehun (Wheat)</option>
-              <option value="Makka">Makka (Maize)</option>
-              <option value="Makhana">Makhana</option>
-              <option value="Sarson">Sarson (Mustard)</option>
-              <option value="Sabzi">Sabzi (Vegetables)</option>
-            </select>
+          <div class="input-group geo-group">
+            <label>Village</label>
+            <input type="text" id="su-village" class="geo-input" placeholder="Enter village name" autocomplete="off" disabled>
+            <input type="hidden" id="su-village-code">
+            <div class="geo-dropdown hidden" id="su-village-dd"></div>
           </div>
         </div>
-        <button class="btn-primary" onclick="handleEmailSignup()">🚀 Create Account</button>
+        <button class="btn-primary" id="su-submit-btn" onclick="handleEmailSignup()">🚀 Create Account</button>
       </div>
     </div>
   </div>

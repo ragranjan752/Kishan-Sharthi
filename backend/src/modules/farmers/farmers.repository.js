@@ -22,7 +22,7 @@ async function findById(farmerId) {
     try {
       const { data, error } = await supabase
         .from(TABLE)
-        .select('id, name, phone, email, district, block, land_size_kattha, land_size_bigha, primary_crop, farmer_category, role, is_active, phone_verified, profile_image_url, profile_completed, profile_completed_at, auth_user_id, created_at, updated_at')
+        .select('id, name, phone, email, district, block, land_size_kattha, land_size_bigha, primary_crop, farmer_category, role, is_active, phone_verified, profile_image_url, profile_completed, profile_completed_at, auth_user_id, state, state_code, district_code, subdistrict_code, village_code, created_at, updated_at')
         .eq('id', farmerId)
         .single();
 
@@ -46,7 +46,7 @@ async function findByEmail(email) {
     try {
       const { data, error } = await supabase
         .from(TABLE)
-        .select('id, name, phone, email, password_hash, district, block, land_size_kattha, land_size_bigha, primary_crop, farmer_category, role, is_active, phone_verified, profile_image_url, profile_completed, profile_completed_at, auth_user_id, created_at, updated_at')
+        .select('id, name, phone, email, password_hash, district, block, land_size_kattha, land_size_bigha, primary_crop, farmer_category, role, is_active, phone_verified, profile_image_url, profile_completed, profile_completed_at, auth_user_id, state, state_code, district_code, subdistrict_code, village_code, created_at, updated_at')
         .eq('email', targetEmail)
         .single();
 
@@ -75,7 +75,7 @@ async function findByAuthUserId(authUserId) {
     try {
       const { data, error } = await supabase
         .from(TABLE)
-        .select('id, name, phone, email, district, block, land_size_kattha, land_size_bigha, primary_crop, farmer_category, role, is_active, phone_verified, profile_image_url, profile_completed, profile_completed_at, auth_user_id, created_at, updated_at')
+        .select('id, name, phone, email, district, block, land_size_kattha, land_size_bigha, primary_crop, farmer_category, role, is_active, phone_verified, profile_image_url, profile_completed, profile_completed_at, auth_user_id, state, state_code, district_code, subdistrict_code, village_code, created_at, updated_at')
         .eq('auth_user_id', authUserId)
         .single();
 
@@ -158,7 +158,7 @@ async function create(farmerData) {
       const { data, error } = await supabase
         .from(TABLE)
         .insert(dbPayload)
-        .select('id, name, phone, email, district, block, primary_crop, farmer_category, role, land_size_kattha, land_size_bigha, profile_image_url, is_active, phone_verified, profile_completed, profile_completed_at, auth_user_id, created_at, updated_at')
+        .select('id, name, phone, email, district, block, primary_crop, farmer_category, role, land_size_kattha, land_size_bigha, profile_image_url, is_active, phone_verified, profile_completed, profile_completed_at, auth_user_id, state, state_code, district_code, subdistrict_code, village_code, created_at, updated_at')
         .single();
 
       if (error) {
@@ -205,7 +205,7 @@ async function update(farmerId, updateData) {
         .from(TABLE)
         .update(safeUpdate)
         .eq('id', farmerId)
-        .select('id, name, phone, email, district, block, primary_crop, farmer_category, land_size_kattha, land_size_bigha, profile_image_url, profile_completed, profile_completed_at, auth_user_id, updated_at')
+        .select('id, name, phone, email, district, block, primary_crop, farmer_category, land_size_kattha, land_size_bigha, profile_image_url, profile_completed, profile_completed_at, auth_user_id, state, state_code, district_code, subdistrict_code, village_code, updated_at')
         .single();
 
       if (!error && data) {

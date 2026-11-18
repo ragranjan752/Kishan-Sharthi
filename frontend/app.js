@@ -90,7 +90,7 @@ function toggleSidebar(forceState) {
 
 function openAuth(tab) {
   document.getElementById('auth-screen').classList.add('show');
-  switchAuthTab(tab || 'login');
+  switchAuthTab(tab || 'signup');
 }
 
 // ── Auth ──
@@ -98,6 +98,7 @@ function switchAuthTab(tab) {
   document.querySelectorAll('.auth-tab').forEach((t, i) => t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'signup')));
   document.getElementById('login-form').classList.toggle('hidden', tab === 'signup');
   document.getElementById('signup-form').classList.toggle('hidden', tab === 'login');
+  if (tab === 'signup') initSignupGeo();
   clearAuthErrors();
 }
 
@@ -224,7 +225,7 @@ async function handleGoogleSignIn() {
     
     if (!res.ok) throw new Error(data.error || 'Google login failed');
 
-    loginSuccess(data.user, data.token);
+    loginSuccess(data.user, data.token, document.getElementById('login-remember') ? document.getElementById('login-remember').checked : true);
     showToast(`✅ Welcome, ${data.user.name.split(' ')[0]}!`, 'success');
   } catch (err) {
     console.error('Google Sign-In error:', err);
@@ -263,12 +264,19 @@ async function handleEmailLogin() {
 
   try {
     if (window.SupabaseAuth && await SupabaseAuth.isConfigured()) {
-      const { data, error } = await SupabaseAuth.signInWithEmail(email, password);
-      if (error) throw new Error(error.message || 'Login failed');
-      const farmer = await SupabaseAuth.bootstrapFarmer();
-      loginSuccess(farmer, (data.session && data.session.access_token) || localStorage.getItem('token'));
-      showToast(`✅ Welcome back, ${(farmer.name || 'Farmer').split(' ')[0]}!`, 'success');
-      return;
+      try {
+        const { data, error } = await SupabaseAuth.signInWithEmail(email, password);
+        if (!error) {
+          const farmer = await SupabaseAuth.bootstrapFarmer();
+          loginSuccess(farmer, (data.session && data.session.access_token) || getAuthToken(), document.getElementById('login-remember') ? document.getElementById('login-remember').checked : true);
+          showToast(`✅ Welcome back, ${(farmer.name || 'Farmer').split(' ')[0]}!`, 'success');
+          return;
+        }
+        // Supabase Auth has no such user (registered via farmers API) → fall back to backend login
+        console.warn('Supabase sign-in failed, trying backend login:', error && error.message);
+      } catch (sbErr) {
+        console.warn('Supabase sign-in error, trying backend login:', sbErr && sbErr.message);
+      }
     }
 
     const res = await fetch('/api/auth/login', {
@@ -288,76 +296,233 @@ async function handleEmailLogin() {
   }
 }
 
+function togglePassword(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  if (btn) btn.textContent = show ? '🙈' : '👁';
+}
+// ── Pan-India Location Pickers (LGD via /api/locations) ──
+const geoApi = (path) => fetch(path).then(r => r.json()).then(b => {
+  if (!b.success) throw new Error(b.message || 'Location data unavailable');
+  return b.data || [];
+});
+
+let geoInitDone = false;
+
+function makeGeoPicker({ inputId, ddId, codeId, getOptions, serverSearch, onPick, loadingText, emptyText, disabledPlaceholder }) {
+  const input = document.getElementById(inputId);
+  const dd = document.getElementById(ddId);
+  const codeEl = document.getElementById(codeId);
+  let options = null;
+  let timer = null;
+
+  const closeOthers = () => document.querySelectorAll('.geo-dropdown').forEach(d => { if (d !== dd) d.classList.add('hidden'); });
+
+  function render(items) {
+    dd.innerHTML = '';
+    if (!items.length) {
+      const e = document.createElement('div');
+      e.className = 'geo-empty';
+      e.textContent = emptyText || 'No matches found';
+      dd.appendChild(e);
+    }
+    items.slice(0, 80).forEach(it => {
+      const o = document.createElement('div');
+      o.className = 'geo-option';
+      o.textContent = it.name;
+      o.onmousedown = ev => { ev.preventDefault(); pick(it); };
+      dd.appendChild(o);
+    });
+    dd.classList.remove('hidden');
+  }
+
+  function pick(it) {
+    input.value = it.name;
+    codeEl.value = it.code;
+    dd.classList.add('hidden');
+    if (onPick) onPick(it);
+  }
+
+  function filter(q) {
+    const lq = (q || '').trim().toLowerCase();
+    const items = (options || []).filter(o => !lq || o.name.toLowerCase().includes(lq));
+    render(items);
+  }
+
+  input.addEventListener('focus', async () => {
+    closeOthers();
+    dd.classList.remove('hidden');
+    if (serverSearch) {
+      dd.innerHTML = '<div class="geo-empty">Searching…</div>';
+      try { render(await serverSearch(input.value)); } catch { render([]); }
+      return;
+    }
+    if (!options) {
+      dd.innerHTML = `<div class="geo-empty">${loadingText || 'Loading…'}</div>`;
+      try {
+        options = await getOptions();
+      } catch (e) {
+        dd.innerHTML = `<div class="geo-empty">⚠️ ${e.message || 'Failed to load locations'}</div>`;
+        return;
+      }
+    }
+    filter(input.value);
+  });
+
+  input.addEventListener('input', () => {
+    codeEl.value = '';
+    clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (serverSearch) {
+        dd.innerHTML = '<div class="geo-empty">Searching…</div>';
+        try { render(await serverSearch(input.value)); } catch { render([]); }
+        return;
+      }
+      filter(input.value);
+    }, serverSearch ? 300 : 50);
+  });
+
+  input.addEventListener('blur', () => setTimeout(() => dd.classList.add('hidden'), 150));
+
+  const defaultPlaceholder = input.placeholder;
+  return {
+    enable() { input.disabled = false; input.placeholder = defaultPlaceholder; },
+    reset() { input.value = ''; codeEl.value = ''; options = null; input.disabled = true; if (disabledPlaceholder) input.placeholder = disabledPlaceholder; },
+    value() { return { name: input.value.trim(), code: parseInt(codeEl.value, 10) || null }; },
+  };
+}
+
+let geoPickers = null;
+
+function initSignupGeo() {
+  if (geoPickers) return;
+  let stateCode = null, districtCode = null, subdistrictCode = null;
+
+  const villagePicker = makeGeoPicker({
+    inputId: 'su-village', ddId: 'su-village-dd', codeId: 'su-village-code',
+    loadingText: 'Loading villages…', emptyText: 'No villages found', disabledPlaceholder: 'Select sub-district first',
+    serverSearch: async (q) => {
+      if (!subdistrictCode) return [];
+      const qq = q && q.trim().length >= 2 ? `&q=${encodeURIComponent(q.trim())}` : '';
+      const list = await geoApi(`/api/locations/villages?subdistrictCode=${subdistrictCode}&limit=50${qq}`);
+      return list.map(v => ({ code: v.village_code, name: v.name }));
+    },
+  });
+
+  const subdistrictPicker = makeGeoPicker({
+    inputId: 'su-subdistrict', ddId: 'su-subdistrict-dd', codeId: 'su-subdistrict-code',
+    loadingText: 'Loading sub-districts…', emptyText: 'No sub-districts found', disabledPlaceholder: 'Select district first',
+    getOptions: async () => {
+      if (!districtCode) return [];
+      const list = await geoApi(`/api/locations/subdistricts?districtCode=${districtCode}`);
+      return list.map(b => ({ code: b.subdistrict_code, name: b.name }));
+    },
+    onPick: (item) => {
+      subdistrictCode = item.code;
+      villagePicker.enable();
+    },
+  });
+
+  const districtPicker = makeGeoPicker({
+    inputId: 'su-district', ddId: 'su-district-dd', codeId: 'su-district-code',
+    loadingText: 'Loading districts…', emptyText: 'No districts found', disabledPlaceholder: 'Select state first',
+    getOptions: async () => {
+      if (!stateCode) return [];
+      const list = await geoApi(`/api/locations/districts?stateCode=${stateCode}`);
+      return list.map(d => ({ code: d.district_code, name: d.name }));
+    },
+    onPick: (item) => {
+      districtCode = item.code;
+      subdistrictCode = null;
+      subdistrictPicker.enable();
+      subdistrictPicker.reset();
+      subdistrictPicker.enable();
+      villagePicker.reset();
+    },
+  });
+
+  const statePicker = makeGeoPicker({
+    inputId: 'su-state', ddId: 'su-state-dd', codeId: 'su-state-code',
+    loadingText: 'Loading states…', emptyText: 'No states found',
+    getOptions: async () => {
+      const list = await geoApi('/api/locations/states');
+      return list.map(s => ({ code: s.state_code, name: s.name }));
+    },
+    onPick: (item) => {
+      stateCode = item.code;
+      districtCode = null;
+      subdistrictCode = null;
+      districtPicker.reset();
+      districtPicker.enable();
+      subdistrictPicker.reset();
+      villagePicker.reset();
+    },
+  });
+
+  geoPickers = { statePicker, districtPicker, subdistrictPicker, villagePicker };
+}
 async function handleEmailSignup() {
   clearAuthErrors();
   const name = document.getElementById('su-name').value.trim();
   const email = document.getElementById('su-email').value.trim();
   const password = document.getElementById('su-password').value;
-  const phone = document.getElementById('su-phone').value.trim();
-  const district = document.getElementById('su-district').value;
-  const block = document.getElementById('su-block').value.trim();
-  const land_size_kattha = document.getElementById('su-land').value.trim();
-  const primary_crop = document.getElementById('su-crop').value;
+  const phone = document.getElementById('su-phone').value.replace(/\D/g, '');
 
-  if (!name || !email || !password || !district || !block || !land_size_kattha) {
-    if (!name) showFieldError('su-name', 'Name is required');
-    if (!email) showFieldError('su-email', 'Email is required');
-    if (!password) showFieldError('su-password', 'Password is required');
-    if (!district) showFieldError('su-district', 'District is required');
-    if (!block) showFieldError('su-block', 'Block is required');
-    if (!land_size_kattha) showFieldError('su-land', 'Land size is required');
-    return;
+  // ── Location selections (LGD codes + display names) ──
+  const state = geoPickers.statePicker.value();
+  const district = geoPickers.districtPicker.value();
+  const subdistrict = geoPickers.subdistrictPicker.value();
+  const village = geoPickers.villagePicker.value();
+
+  // ── Validation ──
+  let valid = true;
+  if (!name) { showFieldError('su-name', 'Full name is required'); valid = false; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showFieldError('su-email', 'Valid email is required'); valid = false; }
+  if (!phone || !/^[6-9]\d{9}$/.test(phone)) { showFieldError('su-phone', 'Enter valid 10-digit mobile number'); valid = false; }
+  if (!password || password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+    showFieldError('su-password', 'Min 8 chars with uppercase, lowercase & number'); valid = false;
   }
+  if (!state.code) { showFieldError('su-state', 'Select your state'); valid = false; }
+  if (!district.code) { showFieldError('su-district', 'Select your district'); valid = false; }
+  if (!subdistrict.name) { showFieldError('su-subdistrict', 'Enter your sub-district / block'); valid = false; }
+  if (!village.name) { showFieldError('su-village', 'Enter your village name'); valid = false; }
+  if (!valid) return;
+
+  const btn = document.getElementById('su-submit-btn');
+  const oldText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
+
+  const geoPayload = {
+    state: state.name, state_code: state.code,
+    district: district.name, district_code: district.code,
+    block: subdistrict.name, subdistrict_code: subdistrict.code,
+    village: village.name, village_code: village.code,
+  };
 
   try {
-    if (window.SupabaseAuth && await SupabaseAuth.isConfigured()) {
-      const { data, error } = await SupabaseAuth.signUpWithEmail(email, password, {
-        name,
-        phone: phone || null,
-        district,
-        block,
-        land_size_kattha: parseFloat(land_size_kattha),
-        primary_crop,
-      });
-      if (error) throw new Error(error.message || 'Registration failed');
-      if (data && data.session) {
-        const farmer = await SupabaseAuth.bootstrapFarmer();
-        loginSuccess(farmer, data.session.access_token);
-        showToast(`✅ Welcome to Kisan Sarthi, ${(farmer.name || 'Farmer').split(' ')[0]}!`, 'success');
-      } else {
-        showAuthError('signup-form', 'Account created. Please check your email to confirm, then log in.');
-        switchAuthTab('login');
-      }
-      return;
-    }
-
+    // Always register via backend farmers API — single source of truth (Supabase Auth
+    // signup would require email confirmation and skip the farmers profile record).
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        name, 
-        email, 
-        password, 
-        phone, 
-        district, 
-        block, 
-        land_size_kattha: parseFloat(land_size_kattha), 
-        primary_crop,
-        phone: phone || null
-      })
+      body: JSON.stringify({ name, email, password, phone, ...geoPayload })
     });
 
     const data = await readApiJson(res);
     if (!res.ok) throw new Error(data.error || 'Registration failed');
 
-    loginSuccess(data.user, data.token);
-    showToast(`✅ Welcome to Kisan Sarthi, ${data.user.name.split(' ')[0]}!`, 'success');
+    document.getElementById('login-email').value = email;
+    switchAuthTab('login');
+    showToast('✅ Account created successfully! Please log in.', 'success');
   } catch (err) {
     console.error('Signup error:', err);
     showAuthError('signup-form', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = oldText; }
   }
 }
-
 async function handleDemoLogin() {
   const btn = document.getElementById('demo-login-btn');
   if (btn) btn.disabled = true;
@@ -387,14 +552,24 @@ async function handleDemoLogin() {
   }
 }
 
-function loginSuccess(user, token) {
+function getAuthToken() {
+  return localStorage.getItem('token') || sessionStorage.getItem('token');
+}
+
+function loginSuccess(user, token, rememberMe = true) {
   // Normalize id/uid for compatibility
   user.uid = user.id || user.uid;
   user.id = user.id || user.uid;
   
   currentUser = user;
   if (token) {
-    localStorage.setItem('token', token);
+    if (rememberMe) {
+      localStorage.setItem('token', token);
+      sessionStorage.removeItem('token');
+    } else {
+      sessionStorage.setItem('token', token);
+      localStorage.removeItem('token');
+    }
   }
   sessionStorage.setItem('ks_user', JSON.stringify(user));
   const cpScreen = document.getElementById('complete-profile-screen');
@@ -523,7 +698,7 @@ async function submitCompleteProfile() {
   btn.disabled = true;
   btn.textContent = '⏳ Saving…';
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const res = await fetch('/api/farmers/me/complete-profile', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -741,7 +916,7 @@ function triggerGallery() {
 // ── Dashboard ──
 async function loadDashboard() {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) {
       console.log('No token found, using default data');
       return;
@@ -838,7 +1013,7 @@ function handleImageUpload(e) {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
       const formData = new FormData();
       formData.append('image', file);
       const upRes = await fetch('/api/detections/upload', {
@@ -1761,7 +1936,7 @@ async function loadCommunity() {
   postsList.innerHTML = '<div class="comm-loading"><div class="spinner"></div> Loading community posts...</div>';
 
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
     const res = await fetch('/api/community/posts', { headers });
     const data = await readApiJson(res);
@@ -1852,7 +2027,7 @@ async function createCommunityPost() {
   }
 
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const res = await fetch('/api/community/posts', {
       method: 'POST',
       headers: {
@@ -1954,7 +2129,7 @@ async function openCommunityDetail(postId) {
 
   // Load replies
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
     const res = await fetch(`/api/community/posts/${postId}`, { headers });
     const data = await readApiJson(res);
@@ -1998,7 +2173,7 @@ function closeCommunityDetail() {
 
 async function likeCommunityPost(postId) {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     await fetch(`/api/community/posts/${postId}/like`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
@@ -2016,7 +2191,7 @@ async function submitCommunityReply(postId) {
     return;
   }
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const res = await fetch(`/api/community/posts/${postId}/reply`, {
       method: 'POST',
       headers: {
@@ -2067,7 +2242,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (restored || currentUser) return;
 
   const savedUser = sessionStorage.getItem('ks_user');
-  const savedToken = localStorage.getItem('token');
+  const savedToken = getAuthToken();
   if (savedUser && savedToken) {
     try {
       const user = JSON.parse(savedUser);
