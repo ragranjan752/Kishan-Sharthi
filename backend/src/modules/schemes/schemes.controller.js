@@ -23,7 +23,7 @@ const getFarmerEligibleSchemes = asyncHandler(async (req, res) => {
   if (req.user && (req.user.id === farmerId || req.user.role === 'admin')) {
     farmerProfile = req.user;
   } else {
-    farmerProfile = await farmerRepo.findById(farmerId);
+    if (req.user) farmerProfile = await farmerRepo.findById(farmerId);
   }
 
   if (!farmerProfile) {

@@ -120,6 +120,11 @@ app.get(['/health', '/api/health', '/api/v1/health'], (req, res) => {
 
 // ── 7. Demo Auth (development only) ──
 app.use('/api/demo', demoRoutes);
+const aiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
+app.use('/api/v1/detections/upload', aiLimiter);
+app.use('/api/detections/upload', aiLimiter);
+app.use('/api/v1/sarthi/chat', aiLimiter);
+app.use('/api/sarthi/chat', aiLimiter);
 app.use('/api/v1/demo', demoRoutes);
 
 // ── 8. Versioned API Routes (/api/v1) ──

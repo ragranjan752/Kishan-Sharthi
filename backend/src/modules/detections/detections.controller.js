@@ -12,7 +12,7 @@ const uploadAndScan = asyncHandler(async (req, res) => {
     throw new AppError('कृपया फसल की पत्ती की छवि अपलोड करें (Image required)', 400, 'NO_FILE_UPLOADED');
   }
 
-  const farmerId = req.user ? req.user.id : (req.body.farmerId || null);
+  const farmerId = req.user ? req.user.id : null; // anonymous uploads cannot claim a farmerId
   const crop = req.body.crop || (req.user ? req.user.primary_crop : 'Dhan');
 
   const record = await detectionService.initiateDetection({
@@ -27,6 +27,9 @@ const uploadAndScan = asyncHandler(async (req, res) => {
 // GET /api/v1/detections/:detectionId
 const getResult = asyncHandler(async (req, res) => {
   const result = await detectionService.getDetectionById(req.params.detectionId);
+  if (result && result.farmer_id && req.user && req.user.id !== result.farmer_id && (req.user.role || 'farmer') !== 'admin') {
+    throw new AppError('Access denied', 403, 'FORBIDDEN');
+  }
   if (!result) {
     throw new AppError('जांच परिणाम नहीं मिला', 404, 'DETECTION_NOT_FOUND');
   }

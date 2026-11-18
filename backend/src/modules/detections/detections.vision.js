@@ -114,7 +114,7 @@ async function callGeminiVision({ prompt, imageBuffer, mimeType, apiKey }) {
         { text: prompt },
       ],
     }],
-    generationConfig: { temperature: 0.1, maxOutputTokens: 1200, responseMimeType: 'application/json' },
+    generationConfig: { temperature: 0.1, maxOutputTokens: 1200, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } },
   };
   const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   if (!res.ok) throw new Error(`Gemini vision error (${res.status})`);

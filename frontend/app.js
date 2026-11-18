@@ -934,34 +934,30 @@ async function loadDashboard() {
     }
     
     const data = await readApiJson(res);
-    console.log('Dashboard data:', data);
+    const d = (data && data.data) ? data.data : data;
+    console.log('Dashboard data:', d);
     
     // Update dashboard cards with API data
     const cards = document.querySelectorAll('.stat-card');
-    if (cards[0]) { // Crop Health
-      cards[0].querySelector('.stat-value').textContent = data.stats.cropHealth + '%';
-      cards[0].querySelector('.stat-change').textContent = data.stats.cropHealthChange;
-    }
-    if (cards[1]) { // Irrigation
-      cards[1].querySelector('.stat-value').textContent = data.stats.irrigation;
-      cards[1].querySelector('.stat-change').textContent = data.stats.irrigationReason;
-    }
-    if (cards[2]) { // Market Price
-      cards[2].querySelector('.stat-value').textContent = data.stats.marketPrice;
-      cards[2].querySelector('.stat-change').textContent = data.stats.marketTrend;
-    }
-    if (cards[3]) { // Schemes
-      cards[3].querySelector('.stat-value').textContent = data.stats.eligibleSchemes;
-      cards[3].querySelector('.stat-change').textContent = data.stats.schemesAmount;
-    }
+    const st = d.stats || {};
+    const wx = d.weather || {};
+    const setStat = (card, valSel, val, chgSel, chg) => {
+      if (!card) return;
+      const sv = card.querySelector(valSel); if (sv && val !== undefined && val !== null) sv.textContent = val;
+      const sc = card.querySelector(chgSel); if (sc) sc.textContent = chg;
+    };
+    setStat(cards[0], '.stat-value', st.cropHealth !== undefined ? st.cropHealth + '%' : null, '.stat-change', st.cropHealthChange || '');
+    setStat(cards[1], '.stat-value', st.irrigation, '.stat-change', st.irrigationReason);
+    setStat(cards[2], '.stat-value', st.marketPrice, '.stat-change', st.marketTrend);
+    setStat(cards[3], '.stat-value', st.eligibleSchemes, '.stat-change', st.schemesAmount);
     
     // Update weather info
     const weatherInfo = document.querySelector('.weather-info');
-    if (weatherInfo) {
+    if (weatherInfo && wx.temp !== undefined) {
       weatherInfo.innerHTML = `
-        <div class="weather-temp">${data.weather.temp}°C</div>
-        <div class="weather-desc">${data.weather.condition}</div>
-        <div class="weather-location">${data.weather.location}</div>
+        <div class="weather-temp">${wx.temp}°C</div>
+        <div class="weather-desc">${wx.condition}</div>
+        <div class="weather-location">${wx.location}</div>
       `;
     }
     
@@ -1014,8 +1010,22 @@ function handleImageUpload(e) {
 
     try {
       const token = getAuthToken();
+      // Compress image client-side: max 1280px, JPEG 0.85 — much faster upload + inference
+      let uploadFile = file;
+      try {
+        const bmp = await createImageBitmap(file);
+        const scale = Math.min(1, 1280 / Math.max(bmp.width, bmp.height));
+        if (scale < 1 || file.size > 512 * 1024) {
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(bmp.width * scale);
+          canvas.height = Math.round(bmp.height * scale);
+          canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+          const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.85));
+          if (blob) uploadFile = new File([blob], 'leaf.jpg', { type: 'image/jpeg' });
+        }
+      } catch (_) { /* fallback to original file */ }
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', uploadFile);
       const upRes = await fetch('/api/detections/upload', {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -1026,7 +1036,7 @@ function handleImageUpload(e) {
       const det0 = upData.data?.id ? upData.data : (upData.data?.detection || upData.detection || {});
       const id = det0.id;
       let det = det0;
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 40; i++) {
         await new Promise((r) => setTimeout(r, 1500));
         const rRes = await fetch(`/api/detections/${id}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -1153,31 +1163,32 @@ async function generateFarmTraceQr() {
 
   try {
     if (status) status.textContent = 'Generating secure QR...';
-    const res = await fetch('/api/farm-trace/qr', {
+    const res = await fetch('/api/trace/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        farmerName: currentUser?.name || 'Farmer',
-        produceName,
+        farmer_name: currentUser?.name || 'Farmer',
+        produce_name: produceName,
         crop,
-        farmLocation,
-        harvestDate,
-        diseaseLogs: logs
+        farm_location: farmLocation,
+        harvest_date: harvestDate,
+        disease_logs_json: JSON.stringify(logs)
       })
     });
     const data = await readApiJson(res);
     if (!res.ok) throw new Error(data?.error || 'Unable to generate QR');
+    const payload = data?.data || data;
 
     const qrImg = document.getElementById('ftf-qr-image');
     const linkEl = document.getElementById('ftf-public-link');
     const summaryEl = document.getElementById('ftf-summary');
-    if (qrImg) qrImg.src = data.qrDataUrl;
+    if (qrImg) qrImg.src = payload.qrCode;
     if (linkEl) {
-      linkEl.href = data.publicUrl;
-      linkEl.textContent = data.publicUrl;
+      linkEl.href = payload.publicUrl;
+      linkEl.textContent = payload.publicUrl;
     }
     if (summaryEl) {
-      summaryEl.textContent = data?.summary?.healthSummary || 'Health summary unavailable';
+      summaryEl.textContent = `${produceName} — ${logs.length} disease scan(s) verified`;
     }
     renderTraceLogs('ftf-log-list', logs);
     if (resultCard) resultCard.style.display = 'block';
@@ -1202,16 +1213,18 @@ async function loadPublicTraceabilityView(token) {
   const content = document.getElementById('traceability-content');
   const error = document.getElementById('traceability-error');
   try {
-    const res = await fetch(`/api/farm-trace/${encodeURIComponent(token)}`);
+    const res = await fetch(`/api/trace/${encodeURIComponent(token)}`);
     const data = await readApiJson(res);
     if (!res.ok) throw new Error(data?.error || 'Traceability record unavailable');
-    const trace = data.trace;
+    const trace = data?.data || data;
+    let traceLogs = [];
+    try { traceLogs = JSON.parse(trace.disease_logs_json || '[]'); } catch (_) {}
 
-    document.getElementById('trace-out-produce').textContent = trace.produceName || '-';
-    document.getElementById('trace-out-location').textContent = trace.farmLocation || '-';
-    document.getElementById('trace-out-harvest').textContent = formatDate(trace.harvestDate);
-    document.getElementById('trace-out-health').textContent = trace.healthSummary || '-';
-    renderTraceLogs('trace-out-logs', trace.diseaseLogs || []);
+    document.getElementById('trace-out-produce').textContent = trace.produce_name || '-';
+    document.getElementById('trace-out-location').textContent = trace.farm_location || '-';
+    document.getElementById('trace-out-harvest').textContent = formatDate(trace.harvest_date);
+    document.getElementById('trace-out-health').textContent = trace.health_summary || '-';
+    renderTraceLogs('trace-out-logs', traceLogs);
 
     if (loading) loading.style.display = 'none';
     if (content) content.style.display = 'block';
@@ -1717,7 +1730,9 @@ async function submitReport() {
 }
 
 // ── Language ──
-function changeLang(lang) { showToast(`🌐 Language: ${lang === 'hi' ? 'हिन्दी' : lang === 'pa' ? 'ਪੰਜਾਬੀ' : 'English'}`, 'info'); }
+const UI_I18N={en:{home:'Home',check:'Check',sarthi:'Sarthi AI',mandi:'Mandi Rates',schemes:'Schemes',menu:'Menu'},hi:{home:'होम',check:'जांचें',sarthi:'सारथी AI',mandi:'मंडी भाव',schemes:'योजनाएं',menu:'मेन्यू'}};
+function applyUiLang(lang){const d=UI_I18N[lang]||UI_I18N.en;document.querySelectorAll('[data-i18n]').forEach(el=>{if(d[el.dataset.i18n])el.textContent=d[el.dataset.i18n]})}
+function changeLang(lang) { applyUiLang(lang==='pa'?'en':lang);showToast(`🌐 Language: ${lang === 'hi' ? 'हिन्दी' : lang === 'pa' ? 'ਪੰਜਾਬੀ' : 'English'}`, 'info'); }
 
 // ── Toast ──
 function showToast(msg, type = 'info') {

@@ -88,7 +88,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
   } else if (result.sent) {
     // Email service not configured: log code server-side only (never in response)
     logger.info(
-      { farmerId: result.farmerId, resetCode: result.rawCode },
+      { farmerId: result.farmerId },
       'Email service not configured — reset code logged server-side only'
     );
   }
@@ -164,6 +164,11 @@ const bootstrapProfile = asyncHandler(async (req, res) => {
 //  GET /api/v1/farmers/phone/:phone
 // ════════════════════════════════════
 const getByPhone = asyncHandler(async (req, res) => {
+  const role = req.user && req.user.role;
+  const isSelf = req.user && req.user.phone === req.params.phone;
+  if (role !== 'admin' && !isSelf) {
+    throw new AppError('Access denied', 403, 'FORBIDDEN');
+  }
   const farmer = await farmerRepo.findByPhone(req.params.phone);
   if (!farmer) {
     throw new AppError('Farmer not found', 404, 'NOT_FOUND');
