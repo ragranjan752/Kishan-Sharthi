@@ -409,9 +409,29 @@ async function completeProfile(farmerId, data) {
     throw new AppError('Phone number already registered', 409, 'PHONE_EXISTS');
   }
 
+  // ── Resolve pan-India geography (LGD codes → canonical names) ──
+  const hasGeoCodes = Boolean(data.state_code || data.district_code || data.subdistrict_code);
+  if (hasGeoCodes && isConfigured) {
+    const geo = await locationsService.resolveGeo({
+      state_code: data.state_code,
+      district_code: data.district_code,
+      subdistrict_code: data.subdistrict_code,
+    });
+    if (data.state_code && !geo.state) throw new AppError('Invalid state selection', 400, 'INVALID_GEO');
+    if (data.district_code && !geo.district) throw new AppError('Invalid district selection', 400, 'INVALID_GEO');
+    if (data.subdistrict_code && !geo.block) throw new AppError('Invalid sub-district selection', 400, 'INVALID_GEO');
+    data.state = geo.state || data.state || null;
+    data.district = geo.district || data.district;
+    data.block = geo.block || data.block;
+  }
+
   const updated = await farmerRepo.update(farmerId, {
     name: data.name,
     phone: data.phone,
+    state: data.state || null,
+    state_code: data.state_code || null,
+    district_code: data.district_code || null,
+    subdistrict_code: data.subdistrict_code || null,
     district: data.district,
     block: data.block,
     land_size_kattha: data.land_size_kattha,

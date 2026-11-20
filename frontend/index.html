@@ -16,13 +16,15 @@
   <meta name="theme-color" content="#052E16" media="(prefers-color-scheme: dark)">
   <meta name="format-detection" content="telephone=no">
   <meta name="mobile-web-app-capable" content="yes">
-  <link rel="apple-touch-icon" href="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png">
+  <link rel="apple-touch-icon" href="/public/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png">
   
   <!-- Backend API URL (Leave blank if deployed together on Render; fill if deploying frontend separately) -->
   <meta name="backend-api-url" content="https://kishan-sharthi.onrender.com">
   
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" type="image/png" href="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png">
+  <link rel="icon" type="image/png" href="/public/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 
 <body>
@@ -64,7 +66,7 @@
     <!-- Navbar -->
     <header class="navbar" id="navbar">
       <a href="#" class="nav-brand">
-        <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi Logo">
+        <img src="/public/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi Logo">
         <div class="nav-brand-text">
           <span class="nav-brand-name">Kisan Sarthi</span>
           <span class="nav-brand-hindi">कृषि सारथी</span>
@@ -114,7 +116,7 @@
         </div>
       </div>
       <div class="hero-image">
-        <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png"
+        <img src="/public/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png"
           alt="Kisan Sarthi - Digital Farming Solutions">
       </div>
     </section>
@@ -254,7 +256,7 @@
     <footer class="footer">
       <div class="footer-grid">
         <div class="footer-brand">
-          <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
+          <img src="/public/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
           <p>Kisan Sarthi — कृषि सारथी<br>AI-powered smart farming platform empowering Indian farmers with technology.
             Smart · Fast · Reliable.</p>
         </div>
@@ -299,7 +301,7 @@
   <div id="auth-screen">
     <div class="auth-box">
       <div class="auth-logo">
-        <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
+        <img src="/public/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
         <h1>Kisan Sarthi</h1>
       </div>
       <p class="auth-tagline">कृषि सारथी — खेत की हर ज़रूरत, अब डिज़िटल साथ</p>
@@ -401,7 +403,7 @@
   <div id="forgot-password-screen">
     <div class="auth-box">
       <div class="auth-logo">
-        <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
+        <img src="/public/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
         <h1>Kisan Sarthi</h1>
       </div>
       <p class="auth-tagline">कृषि सारथी — Password Recovery</p>
@@ -454,7 +456,7 @@
   <div id="complete-profile-screen">
     <div class="auth-box cp-box">
       <div class="auth-logo">
-        <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
+        <img src="/public/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
         <h1>Kisan Sarthi</h1>
       </div>
       <p class="auth-tagline">कृषि सारथी — किसान प्रोफ़ाइल पूरी करें</p>
@@ -473,13 +475,24 @@
         </div>
         <div class="form-row">
           <div class="input-group">
-            <label for="cp-district">जिला</label>
-            <select id="cp-district"><option value="">जिला चुनें</option></select>
+            <label for="cp-state">राज्य / UT</label>
+            <input type="text" id="cp-state" class="geo-input" placeholder="Select state / UT" autocomplete="off">
+            <input type="hidden" id="cp-state-code">
+            <div class="geo-dropdown hidden" id="cp-state-dd"></div>
           </div>
           <div class="input-group">
-            <label for="cp-block">प्रखंड</label>
-            <input type="text" id="cp-block" list="cp-block-options" placeholder="प्रखंड चुनें या लिखें">
-            <datalist id="cp-block-options"></datalist>
+            <label for="cp-district">जिला</label>
+            <input type="text" id="cp-district" class="geo-input" placeholder="Select district" autocomplete="off" disabled>
+            <input type="hidden" id="cp-district-code">
+            <div class="geo-dropdown hidden" id="cp-district-dd"></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="input-group">
+            <label for="cp-subdistrict">उप-जिला / ब्लॉक / तहसील</label>
+            <input type="text" id="cp-subdistrict" class="geo-input" placeholder="Select sub-district" autocomplete="off" disabled>
+            <input type="hidden" id="cp-subdistrict-code">
+            <div class="geo-dropdown hidden" id="cp-subdistrict-dd"></div>
           </div>
         </div>
         <div class="form-row">
@@ -499,9 +512,32 @@
             <option value="Makhana">Makhana (मखाना)</option>
             <option value="Dhan">Dhan (धान)</option>
             <option value="Makka">Makka (मक्का)</option>
+            <option value="Gehun">Gehun (गेहूं)</option>
+            <option value="Sarson">Sarson (सरसों)</option>
+            <option value="Aloo">Aloo (आलू)</option>
+            <option value="Tamatar">Tamatar (टमाटर)</option>
+            <option value="Kapas">Kapas (कपास)</option>
+            <option value="Ganna">Ganna (गन्ना)</option>
+            <option value="Chana">Chana (चना)</option>
+            <option value="Arhar">Arhar (अरहर/तूर)</option>
+            <option value="Moong">Moong (मूंग)</option>
+            <option value="Moongfali">Moongfali (मूंगफली)</option>
+            <option value="Soyabean">Soyabean (सोयाबीन)</option>
+            <option value="Jowar">Jowar (ज्वार)</option>
+            <option value="Bajra">Bajra (बाजरा)</option>
+            <option value="Jau">Jau (जौ)</option>
+            <option value="Kela">Kela (केला)</option>
+            <option value="Santra">Santra (संतरा)</option>
+            <option value="Papita">Papita (पपीता)</option>
+            <option value="Baingan">Baingan (बैंगन)</option>
+            <option value="Bhindi">Bhindi (भिंडी)</option>
+            <option value="Kheera">Kheera (खीरा)</option>
+            <option value="Sabzi">Sabzi (सब्जी)</option>
+            <option value="Anya">Anya (अन्य)</option>
           </select>
         </div>
         <button class="btn-primary" id="cp-submit" onclick="submitCompleteProfile()">✅ प्रोफ़ाइल पूरी करें</button>
+        <button type="button" class="btn-hero-outline" style="margin-top:10px;width:100%;" onclick="skipProfile()">⏭ अभी के लिए छोड़ें (Skip)</button>
       </div>
     </div>
   </div>
@@ -510,7 +546,7 @@
   <div id="app">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
-        <img src="/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
+        <img src="/public/assets/images/Digital%20farming%20solutions%20for%20a%20sustainable%20future.png" alt="Kisan Sarthi">
         <div class="brand-text">
           <span class="brand-name">Kisan Sarthi</span>
           <span class="brand-hindi">कृषि सारथी</span>
@@ -525,21 +561,21 @@
         </div>
       </div>
       <nav>
-        <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">🏠</span> Dashboard</div>
-        <div class="nav-item" onclick="showPage('disease',this)"><span class="icon">🔬</span> Disease Detection</div>
-        <div class="nav-item" onclick="showPage('trace',this)"><span class="icon">🔳</span> Farm-to-Fork QR</div>
-        <div class="nav-item" onclick="showPage('weather',this)"><span class="icon">💧</span> Irrigation Advice</div>
-        <div class="nav-item" onclick="showPage('market',this)"><span class="icon">🛒</span> Fertilizer Market</div>
-        <div class="nav-item" onclick="showPage('mandi',this)"><span class="icon">📊</span> Mandi Prices</div>
-        <div class="nav-item" onclick="showPage('schemes',this)"><span class="icon">🏛</span> Govt Schemes</div>
-        <div class="nav-item" onclick="showPage('community',this)"><span class="icon">👥</span> Community</div>
-        <div class="nav-item" onclick="showPage('tools',this)"><span class="icon">🚜</span> Tool Sharing</div>
-        <div class="nav-item" onclick="showPage('offline',this)"><span class="icon">📶</span> SMS / IVR Access</div>
-        <div class="nav-item" onclick="showPage('sos',this)"><span class="icon">🚨</span> SOS Emergency <span
+        <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">🏠</span> <span data-i18n="dash">Dashboard</span></div>
+        <div class="nav-item" onclick="showPage('disease',this)"><span class="icon">🔬</span> <span data-i18n="disease">Disease Detection</span></div>
+<div class="nav-item" onclick="showPage('trace',this)"><span class="icon">🔳</span> <span data-i18n="trace">Farm-to-Fork QR</span></div>
+        <div class="nav-item" onclick="showPage('weather',this)"><span class="icon">💧</span> <span data-i18n="irrigation">Irrigation Advice</span></div>
+        <div class="nav-item" onclick="showPage('market',this)"><span class="icon">🛒</span> <span data-i18n="market">Fertilizer Market</span></div>
+        <div class="nav-item" onclick="showPage('mandi',this)"><span class="icon">📊</span> <span data-i18n="mandi2">Mandi Prices</span></div>
+        <div class="nav-item" onclick="showPage('schemes',this)"><span class="icon">🏛</span> <span data-i18n="schemes2">Govt Schemes</span></div>
+        <div class="nav-item" onclick="showPage('community',this)"><span class="icon">👥</span> <span data-i18n="community">Community</span></div>
+        <div class="nav-item" onclick="showPage('tools',this)"><span class="icon">🚜</span> <span data-i18n="tools">Tool Sharing</span></div>
+        <div class="nav-item" onclick="showPage('offline',this)"><span class="icon">📶</span> <span data-i18n="offline">SMS / IVR Access</span></div>
+        <div class="nav-item" onclick="showPage('sos',this)"><span class="icon">🚨</span> <span data-i18n="sos">SOS Emergency</span> <span
             class="nav-badge">!</span></div>
       </nav>
       <div class="sidebar-bottom">
-        <div class="nav-item" onclick="logout()"><span class="icon">🚪</span> Logout</div>
+        <div class="nav-item" onclick="logout()"><span class="icon">🚪</span> <span data-i18n="logout">Logout</span></div>
       </div>
     </aside>
     <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
@@ -596,58 +632,48 @@
             </div>
           </div>
           <div class="dashboard-grid">
-            <div class="card">
-              <div class="card-title"><span class="dot"></span> AI Daily Advisory</div>
-              <div class="ai-bubble">
-                <div class="ai-header">
-                  <div class="ai-dot"></div><span>Kisan Sarthi AI</span>
-                </div>
-                <strong id="ai-advisory-title">Today's Recommendations for your crop:</strong><br><br>
-                🌡️ Temperature forecast: 28–34°C — within safe range for grain filling stage.<br>
-                💧 <strong>Skip irrigation today</strong> — 12mm rainfall expected in next 36 hrs.<br>
-                🐛 Watch for <strong>aphid activity</strong> — humid conditions increase risk. Scout fields early
-                morning.<br>
-                🌾 Wheat is at <strong>boot stage</strong> — ensure no moisture stress for next 10 days.<br>
-                📦 Consider applying <strong>potash top-dressing</strong> within 5 days.
-              </div>
-            </div>
             <div>
-              <div class="card" style="margin-bottom:18px;">
-                <div class="card-title"><span class="dot"></span> Quick Actions</div>
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                  <button class="btn-primary" style="text-align:left;padding:11px 14px;"
-                    onclick="showPage('disease',null)">🔬 Upload Crop Photo</button>
-                  <button class="btn-primary"
-                    style="text-align:left;padding:11px 14px;background:linear-gradient(135deg,var(--sky),var(--sky-light));"
-                    onclick="showPage('weather',null)">💧 Check Irrigation Need</button>
-                  <button class="btn-primary"
-                    style="text-align:left;padding:11px 14px;background:linear-gradient(135deg,var(--accent),var(--accent-light));"
-                    onclick="showPage('mandi',null)">📊 View Today's Rates</button>
-                  <button class="btn-primary"
-                    style="text-align:left;padding:11px 14px;background:linear-gradient(135deg,var(--earth),var(--earth-light));"
-                    onclick="showPage('schemes',null)">🏛 Govt Schemes</button>
+              <div class="card">
+                <div class="card-title"><span class="dot"></span> AI Daily Advisory</div>
+                <div class="ai-bubble">
+                  <div class="ai-header">
+                    <div class="ai-dot"></div><span>Kisan Sarthi AI</span>
+                  </div>
+                  <strong id="ai-advisory-title">Today's Recommendations for your crop:</strong><br><br>
+                  <div id="ai-advisory-content">
+                    🌡️ Temperature forecast: 28–34°C — within safe range for crop growth.<br>
+                    💧 <strong>Irrigation advice</strong>: Rain expected — review weather before pump operation.<br>
+                    🐛 Active field scouting recommended early morning for common pests.<br>
+                    🌾 Balanced moisture maintenance during critical development stage.<br>
+                    📦 Recommended inputs available at government rates via Fertilizer Market.
+                  </div>
                 </div>
               </div>
               <div class="card">
                 <div class="card-title"><span class="dot"></span> Weather Snapshot</div>
-                <div style="font-size:44px;text-align:center;margin:6px 0;">🌤️</div>
-                <div style="text-align:center;font-size:32px;font-weight:800;color:var(--sky);">32°C</div>
-                <div style="text-align:center;color:var(--text-muted);font-size:12px;margin-top:3px;">Patna, Bihar ·
-                  Partly Cloudy</div>
+                <div id="dash-weather-icon" style="font-size:44px;text-align:center;margin:6px 0;">🌤️</div>
+                <div id="dash-weather-temp" style="text-align:center;font-size:32px;font-weight:800;color:var(--sky);">32°C</div>
+                <div id="dash-weather-desc" style="text-align:center;color:var(--text-muted);font-size:12px;margin-top:3px;">Patna, Bihar · Partly Cloudy</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;">
-                  <div
-                    style="text-align:center;padding:8px;background:var(--primary-pale);border-radius:8px;font-size:11px;">
-                    💨 18 km/h<br><span style="color:var(--text-muted)">Wind</span></div>
-                  <div
-                    style="text-align:center;padding:8px;background:var(--primary-pale);border-radius:8px;font-size:11px;">
-                    💧 62%<br><span style="color:var(--text-muted)">Humidity</span></div>
+                  <div style="text-align:center;padding:8px;background:var(--primary-pale);border-radius:8px;font-size:11px;">
+                    <span id="dash-weather-wind">💨 18 km/h</span><br><span style="color:var(--text-muted)">Wind</span></div>
+                  <div style="text-align:center;padding:8px;background:var(--primary-pale);border-radius:8px;font-size:11px;">
+                    <span id="dash-weather-humidity">💧 62%</span><br><span style="color:var(--text-muted)">Humidity</span></div>
                 </div>
+              </div>
+            </div>
+            <div>
+              <div class="card">
+                <div class="card-title"><span class="dot"></span> 🗺️ Map Preview</div>
+                <div id="state-map-frame" style="width:100%;height:280px;border-radius:10px;overflow:hidden;background:var(--primary-pale);margin-top:8px;"></div>
+                <div id="sm-state-pin" style="margin-top:8px;font-size:13px;font-weight:600;color:var(--primary-dark);"></div>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">🖱️ Click map to open larger view</p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- DISEASE DETECTION -->
+                                <!-- DISEASE DETECTION -->
         <div class="page" id="page-disease">
           <div class="section-title">🔬 AI Crop Disease Detection</div>
           <p class="section-sub">Upload or take a live photo of your crop leaf for instant AI diagnosis</p>
@@ -672,16 +698,26 @@
           <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="handleImageUpload(event)" style="display:none;">
 
           <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
-            <div class="upload-icon" id="upload-icon">📸</div>
+            <div class="upload-icon" id="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
             <h3>Click to Upload Crop Photo</h3>
             <p>Supports JPG, PNG · Max 10MB · Wheat, Rice, Cotton, Tomato, Maize, Makhana</p>
-            <input type="file" id="file-input" accept="image/*" onchange="handleImageUpload(event)">
+            <input type="file" id="file-input" accept="image/*" capture="environment" onchange="handleImageUpload(event)">
           </div>
           <img id="preview-img" class="preview-img" style="display:none;">
           <div id="disease-loading" class="loading" style="display:none;">
             <div class="spinner"></div> Analyzing crop with Kisan Sarthi AI…
           </div>
           <div id="disease-result" style="display:none;"></div>
+          <div id="det-chat-box" style="display:none;margin-top:16px;">
+            <div class="card" style="padding:16px;">
+              <div style="font-weight:700;font-size:14px;margin-bottom:10px;">💬 इस रिजल्ट के बारे में AI सारथी से पूछें</div>
+              <div id="det-chat-messages" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
+              <div style="display:flex;gap:8px;">
+                <input id="det-chat-input" type="text" maxlength="1000" placeholder="जैसे: क्या मुझे दवा छिड़काव करनी चाहिए?" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;" onkeydown="if(event.key==='Enter')sendDetectionChat()">
+                <button class="btn-primary" style="padding:10px 16px;border-radius:10px;" onclick="sendDetectionChat()">भेजें</button>
+              </div>
+            </div>
+          </div>
           <div class="card" style="margin-top:20px;">
             <div class="card-title"><span class="dot"></span> Common Diseases This Season</div>
             <div
@@ -708,9 +744,44 @@
               </div>
             </div>
           </div>
-        </div>
+          <!-- How It Works -->
+          <div class="card" style="margin-top:20px;">
+            <div class="card-title"><span class="dot"></span> 📋 कैसे काम करता है (How It Works)</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:10px;">
+              <div style="padding:12px;background:var(--primary-pale);border-radius:10px;text-align:center;">
+                <div style="font-size:24px;">1️⃣</div><strong style="font-size:12px;">Photo Upload</strong><br><small style="color:var(--text-muted);">Clear leaf photo camera/gallery se</small>
+              </div>
+              <div style="padding:12px;background:var(--primary-pale);border-radius:10px;text-align:center;">
+                <div style="font-size:24px;">2️⃣</div><strong style="font-size:12px;">AI Analysis</strong><br><small style="color:var(--text-muted);">Gemini AI + ICAR/KVK verified knowledge</small>
+              </div>
+              <div style="padding:12px;background:var(--primary-pale);border-radius:10px;text-align:center;">
+                <div style="font-size:24px;">3️⃣</div><strong style="font-size:12px;">Diagnosis</strong><br><small style="color:var(--text-muted);">Disease name, severity, confidence %</small>
+              </div>
+              <div style="padding:12px;background:var(--primary-pale);border-radius:10px;text-align:center;">
+                <div style="font-size:24px;">4️⃣</div><strong style="font-size:12px;">Treatment</strong><br><small style="color:var(--text-muted);">Organic + chemical remedy, sources cited</small>
+              </div>
+            </div>
+          </div>
 
-        <div class="page" id="page-trace">
+          <!-- Supported Crops -->
+          <div class="card" style="margin-top:16px;">
+            <div class="card-title"><span class="dot"></span> 🌾 Supported Crops (26+ फसलें, 34 रोग)</div>
+            <div style="margin-top:8px;"><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Dhan (धान)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Gehun (गेहूं)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Makka (मक्का)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Sarson (सरसों)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Aloo (आलू)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Tamatar (टमाटर)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Kapas (कपास)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Ganna (गन्ना)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Chana (चना)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Arhar (अरहर)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Moong (मूंग)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Moongfali (मूंगफली)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Soyabean (सोयाबीन)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Jowar (ज्वार)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Bajra (बाजरा)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Jau (जौ)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Kela (केला)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Santra (संतरा)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Papita (पपीता)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Baingan (बैंगन)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Bhindi (भिंडी)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Kheera (खीरा)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Litchi</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Aam (आम)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Makhana (मखाना)</span><span style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;margin:3px;">Sabzi (सब्जी)</span></div>
+          </div>
+
+          <!-- Photo Tips -->
+          <div class="card" style="margin-top:16px;">
+            <div class="card-title"><span class="dot"></span> 📸 Better Photo = Better Diagnosis</div>
+            <ul style="margin:8px 0 0 18px;font-size:13px;color:var(--text-muted);line-height:1.9;">
+              <li>रोगग्रस्त पत्ते/भाग का <strong>clear close-up</strong> लें</li>
+              <li>Daylight में photo लें, flash से बचें</li>
+              <li>पत्ती पूरी frame में हो, धुंधली photo न हो</li>
+              <li>एक photo में एक plant part — leaf, stem या fruit</li>
+              <li>ज्यादा dark/light photo से accuracy घटती है</li>
+            </ul>
+          </div>
+        </div>
+<div class="page" id="page-trace">
           <div class="section-title">🔳 Farm-to-Fork QR Generator</div>
           <p class="section-sub">Generate a consumer-facing QR code with farm location, harvest date, and disease
             detection health logs.</p>
@@ -747,7 +818,10 @@
               <div>
                 <div class="trace-link-label">Consumer verification link</div>
                 <a id="ftf-public-link" class="trace-public-link" target="_blank" rel="noopener noreferrer"></a>
-                <button class="btn-apply" onclick="copyTraceLink()" style="margin-top:12px;">Copy Link</button>
+                <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+                  <button class="btn-primary" onclick="downloadTraceQr()">⬇️ Download QR Code</button>
+                  <button class="btn-apply" onclick="copyTraceLink()">📋 Copy Link</button>
+                </div>
                 <div class="trace-summary" id="ftf-summary"></div>
               </div>
             </div>
@@ -765,10 +839,10 @@
           <div class="weather-hero">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:20px;">
               <div>
-                <div style="font-size:13px;opacity:0.8;margin-bottom:4px;">📍 Patna, Bihar · Live</div>
-                <div class="weather-temp">32°C</div>
-                <div style="font-size:16px;margin-top:6px;opacity:0.9;">☁️ Partly Cloudy</div>
-                <div style="font-size:12px;opacity:0.7;margin-top:4px;">Feels like 36°C · UV Index: High</div>
+                <div id="irrig-location" style="font-size:13px;opacity:0.8;margin-bottom:4px;">📍 Patna, Bihar · Live</div>
+                <div id="irrig-temp" class="weather-temp">32°C</div>
+                <div id="irrig-cond" style="font-size:16px;margin-top:6px;opacity:0.9;">☁️ Partly Cloudy</div>
+                <div id="irrig-sub" style="font-size:12px;opacity:0.7;margin-top:4px;">Feels like 36°C · UV Index: Moderate</div>
               </div>
               <div style="text-align:right;">
                 <div style="font-size:12px;opacity:0.7;margin-bottom:6px;">5-Day Forecast</div>
@@ -810,28 +884,28 @@
           <div class="weather-grid">
             <div class="weather-stat">
               <div class="ws-icon">💧</div>
-              <div class="ws-val">62%</div>
+              <div id="irrig-humidity" class="ws-val">62%</div>
               <div class="ws-label">Humidity</div>
             </div>
             <div class="weather-stat">
               <div class="ws-icon">🌧</div>
-              <div class="ws-val">12mm</div>
-              <div class="ws-label">Rain Tomorrow</div>
+              <div id="irrig-rain" class="ws-val">12mm</div>
+              <div class="ws-label">Rain Forecast</div>
             </div>
             <div class="weather-stat">
               <div class="ws-icon">💨</div>
-              <div class="ws-val">18 km/h</div>
+              <div id="irrig-wind" class="ws-val">18 km/h</div>
               <div class="ws-label">Wind Speed</div>
             </div>
             <div class="weather-stat">
               <div class="ws-icon">🌱</div>
-              <div class="ws-val">24°C</div>
+              <div id="irrig-soil" class="ws-val">24°C</div>
               <div class="ws-label">Soil Temp</div>
             </div>
           </div>
           <div class="card">
             <div class="card-title"><span class="dot"></span> AI Irrigation Recommendations</div>
-            <div class="advice-list">
+            <div id="irrig-advice-container" class="advice-list">
               <div class="advice-item">
                 <div class="advice-icon">🚫</div>
                 <div>
@@ -943,10 +1017,11 @@
           <p class="section-sub">Real-time crop prices from 450+ mandis · Updated every hour</p>
           <div class="tabs">
             <button class="tab active" onclick="filterMandi('all',this)">All Crops</button>
-            <button class="tab" onclick="filterMandi('grains',this)">Grains</button>
-            <button class="tab" onclick="filterMandi('pulses',this)">Pulses</button>
-            <button class="tab" onclick="filterMandi('oilseeds',this)">Oilseeds</button>
-            <button class="tab" onclick="filterMandi('vegetables',this)">Vegetables</button>
+            <button class="tab" onclick="filterMandi('grains',this)">Grains (अनाज)</button>
+            <button class="tab" onclick="filterMandi('commercial',this)">🌸 Makhana (मखाना)</button>
+            <button class="tab" onclick="filterMandi('pulses',this)">Pulses (दलहन)</button>
+            <button class="tab" onclick="filterMandi('oilseeds',this)">Oilseeds (तिलहन)</button>
+            <button class="tab" onclick="filterMandi('vegetables',this)">Vegetables (सब्जियां)</button>
           </div>
           <div class="card" style="overflow-x:auto;">
             <table class="price-table">
@@ -1153,7 +1228,7 @@
         <div class="page" id="page-offline">
           <div class="section-title">📶 Offline SMS + IVR Access</div>
           <p class="section-sub">Full Kisan Sarthi features via SMS and phone call — no internet needed</p>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+          <div class="offline-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
             <div class="card">
               <div class="card-title"><span class="dot"></span> 📱 SMS Commands</div>
               <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Send SMS to <strong>56789</strong>
@@ -1252,83 +1327,84 @@
             <p style="opacity:0.7;font-size:12px;">Hold 3 seconds for silent SOS · Tap for voice call</p>
           </div>
           <div class="sos-contacts">
-            <div class="contact-card">
+            <a href="tel:1551" class="contact-card">
               <div class="contact-icon">👨‍🌾</div>
               <div class="contact-name">Kisan Helpline</div>
               <div class="contact-num">1551</div>
               <div class="contact-desc">Crop & farming help</div>
-            </div>
-            <div class="contact-card">
+            </a>
+            <a href="tel:108" class="contact-card">
               <div class="contact-icon">🏥</div>
               <div class="contact-name">Medical Emergency</div>
               <div class="contact-num">108</div>
               <div class="contact-desc">Ambulance service</div>
-            </div>
-            <div class="contact-card">
+            </a>
+            <a href="tel:1070" class="contact-card">
               <div class="contact-icon">🌊</div>
               <div class="contact-name">Flood / Disaster</div>
               <div class="contact-num">1070</div>
               <div class="contact-desc">NDRF helpline</div>
-            </div>
-            <div class="contact-card">
+            </a>
+            <a href="tel:1962" class="contact-card">
               <div class="contact-icon">🐂</div>
               <div class="contact-name">Animal Emergency</div>
               <div class="contact-num">1962</div>
               <div class="contact-desc">Veterinary help</div>
-            </div>
-            <div class="contact-card">
+            </a>
+            <a href="tel:100" class="contact-card">
               <div class="contact-icon">🚓</div>
               <div class="contact-name">Police</div>
               <div class="contact-num">100</div>
               <div class="contact-desc">Law & order</div>
-            </div>
-            <div class="contact-card">
+            </a>
+            <a href="tel:101" class="contact-card">
               <div class="contact-icon">🔥</div>
               <div class="contact-name">Fire Brigade</div>
               <div class="contact-num">101</div>
               <div class="contact-desc">Fire emergency</div>
-            </div>
-            <div class="contact-card">
+            </a>
+            <a href="tel:14447" class="contact-card">
               <div class="contact-icon">🌾</div>
               <div class="contact-name">Crop Insurance</div>
               <div class="contact-num">14447</div>
               <div class="contact-desc">PMFBY claims</div>
-            </div>
-            <div class="contact-card">
+            </a>
+            <a href="tel:1800116666" class="contact-card">
               <div class="contact-icon">💊</div>
               <div class="contact-name">Pesticide Poison</div>
               <div class="contact-num">1800-11-6666</div>
               <div class="contact-desc">Poison control</div>
-            </div>
+            </a>
           </div>
           <div class="card" style="margin-top:20px;">
-            <div class="card-title"><span class="dot"></span> Report Incident</div>
+            <div class="card-title"><span class="dot"></span> Report Incident (आपदा / नुकसान सूचना)</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
               <div class="input-group"><label>Incident Type</label>
-                <select
+                <select id="sos-incident-type"
                   style="padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:#fff;outline:none;">
-                  <option>Crop Damage</option>
-                  <option>Flood</option>
-                  <option>Fire</option>
-                  <option>Animal Attack</option>
-                  <option>Medical</option>
-                  <option>Other</option>
+                  <option value="Crop Damage">🌾 Crop Damage (फसल क्षति)</option>
+                  <option value="Flood">🌊 Flood / Waterlogging (बाढ़ / जलभराव)</option>
+                  <option value="Fire">🔥 Fire (आग)</option>
+                  <option value="Animal Attack">🐂 Animal / Pest Attack (नीलगाय / कीट प्रकोप)</option>
+                  <option value="Medical">🏥 Medical Emergency (चिकित्सा आपातकाल)</option>
+                  <option value="Other">⚠️ Other (अन्य)</option>
                 </select>
               </div>
               <div class="input-group"><label>Severity</label>
-                <select
+                <select id="sos-severity"
                   style="padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:#fff;outline:none;">
-                  <option>🔴 Critical</option>
-                  <option>🟡 Urgent</option>
-                  <option>🟢 Moderate</option>
+                  <option value="Critical">🔴 Critical (अति गंभीर)</option>
+                  <option value="Urgent" selected>🟡 Urgent (तत्काल)</option>
+                  <option value="Moderate">🟢 Moderate (सामान्य)</option>
                 </select>
               </div>
             </div>
             <div class="input-group" style="margin-bottom:14px;"><label>Description</label>
-              <input type="text" placeholder="Briefly describe the situation…">
+              <input id="sos-description" type="text" placeholder="Briefly describe the situation (स्थान, नुकसान और आवश्यकता)…">
             </div>
             <button class="btn-primary" style="background:linear-gradient(135deg,var(--red),var(--red-light));"
               onclick="submitReport()">📡 Submit Emergency Report</button>
+            <div id="sos-status" style="margin-top:10px;font-size:13px;display:none;"></div>
           </div>
         </div>
       </div>
@@ -1340,15 +1416,18 @@
         <span class="nav-icon">🏠</span>
         <span class="nav-label" data-i18n="home">होम</span>
       </button>
-      <button type="button" class="mobile-nav-btn" data-page="disease" onclick="showPage('disease', this)">
-        <span class="nav-icon">🔬</span>
-        <span class="nav-label" data-i18n="check">जांचें</span>
-      </button>
+      
       <button type="button" class="mobile-nav-btn mobile-nav-highlight" data-page="sarthi" onclick="toggleChat()">
         <span class="nav-icon">🤖</span>
         <span class="nav-label" data-i18n="sarthi">सारथी AI</span>
       </button>
-      <button type="button" class="mobile-nav-btn" data-page="mandi" onclick="showPage('mandi', this)">
+            
+      
+      <button type="button" class="mobile-nav-btn" data-page="disease" onclick="showPage('disease', this)">
+        <span class="nav-icon">🔬</span>
+        <span class="nav-label" data-i18n="check">जांचें</span>
+      </button>
+<button type="button" class="mobile-nav-btn" data-page="mandi" onclick="showPage('mandi', this)">
         <span class="nav-icon">📊</span>
         <span class="nav-label" data-i18n="mandi">मंडी भाव</span>
       </button>
@@ -1391,13 +1470,7 @@
           </div>
         </div>
         <div class="chat-header-actions">
-          <select class="voice-lang-select" id="voice-lang" onchange="changeVoiceLang(this.value)"
-            title="Voice Language">
-            <option value="hi">🇮🇳 हिन्दी</option>
-            <option value="en">🇬🇧 English</option>
-            <option value="bho">🔶 भोजपुरी</option>
-            <option value="mai">🔷 मैथिली</option>
-          </select>
+          
           <button class="chat-close" onclick="toggleChat()">✕</button>
         </div>
       </div>
@@ -1407,12 +1480,17 @@
           <div class="msg-bubble">
             <strong>🙏 Namaste!</strong> I'm your Kisan Sarthi AI Assistant.<br><br>
             Ask me anything about farming — diseases, fertilizers, irrigation, schemes, mandi prices & more!<br><br>
-            🎤 <em>Tap the mic button to ask by voice in Hindi, English, Bhojpuri or Maithili!</em>
+            🎤 
             <button class="btn-speak-msg" onclick="speakText(this.closest('.msg-bubble').innerText)"
               title="Listen 🔊">🔊</button>
           </div>
         </div>
-        <div class="chat-suggestions" id="chat-suggestions"></div>
+        <div class="chat-suggestions" id="chat-suggestions">
+          <button type="button" class="chat-sugg-btn" onclick="sendQuickChat('धान में खाद डालने का सही समय और मात्रा?')">🌾 धान खाद सलाह</button>
+          <button type="button" class="chat-sugg-btn" onclick="sendQuickChat('दरभंगा मखाना सब्सिडी योजना की जानकारी')">🌸 मखाना सब्सिडी</button>
+          <button type="button" class="chat-sugg-btn" onclick="sendQuickChat('गेहूं में पीला रतुआ का जैविक उपचार')">🍂 गेहूं पीला रतुआ</button>
+          <button type="button" class="chat-sugg-btn" onclick="sendQuickChat('आज मेरे खेत में सिंचाई करनी चाहिए या नहीं?')">💧 आज सिंचाई सलाह</button>
+        </div>
       </div>
       <div class="chat-input-area">
         <button class="voice-btn" id="voice-btn" onclick="toggleVoiceInput()" title="Voice Input 🎤">
@@ -1440,6 +1518,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
   <script src="firebase-config.js"></script>
   <script src="supabase-auth.js"></script>
+  
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
 
   <!-- Invisible reCAPTCHA container for Phone Auth -->

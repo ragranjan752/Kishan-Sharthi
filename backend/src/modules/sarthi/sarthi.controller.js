@@ -12,12 +12,13 @@ const chatInputSchema = z.object({
   message: z.string().min(1, 'संदेश रिक्त नहीं हो सकता').max(1000, 'संदेश 1000 अक्षरों से कम होना चाहिए'),
   farmerId: z.string().optional(),
   sessionId: z.string().optional(),
-  lang: z.string().max(20).optional()
+  lang: z.string().max(20).optional(),
+  context: z.string().max(2500).optional()
 });
 
 // POST /api/v1/sarthi/chat
 const chat = asyncHandler(async (req, res) => {
-  const { message, farmerId, sessionId, lang } = chatInputSchema.parse(req.body);
+  const { message, farmerId, sessionId, lang, context } = chatInputSchema.parse(req.body);
 
   let farmer = req.user || {};
   if (!farmer.id && farmerId) {
@@ -29,7 +30,8 @@ const chat = asyncHandler(async (req, res) => {
     message,
     farmer,
     sessionId,
-    lang
+    lang,
+    context
   });
 
   return sendSuccess(res, result, 'उत्तर तैयार है');

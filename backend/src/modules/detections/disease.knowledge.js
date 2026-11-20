@@ -14,7 +14,32 @@ const CROP_ALIASES = {
   litchi: 'Litchi', लीची: 'Litchi',
   makhana: 'Makhana', मखाना: 'Makhana',
   aam: 'Aam', mango: 'Aam', आम: 'Aam',
-  sabzi: 'Sabzi', vegetable: 'Sabzi', सब्जी: 'Sabzi'
+  sabzi: 'Sabzi', vegetable: 'Sabzi', सब्जी: 'Sabzi',
+  aloo: 'Aloo', potato: 'Aloo', आलू: 'Aloo',
+  tamatar: 'Tamatar', tomato: 'Tamatar', टमाटर: 'Tamatar',
+  kapas: 'Kapas', cotton: 'Kapas', कपास: 'Kapas',
+  ganna: 'Ganna', sugarcane: 'Ganna', गन्ना: 'Ganna',
+  chana: 'Chana', chickpea: 'Chana', चना: 'Chana',
+  arhar: 'Arhar', pigeonpea: 'Arhar', अरहर: 'Arhar', toor: 'Arhar',
+  moong: 'Moong', mungbean: 'Moong', मूंग: 'Moong',
+  urad: 'Urad', blackgram: 'Urad', उड़द: 'Urad',
+  moongfali: 'Moongfali', groundnut: 'Moongfali', peanut: 'Moongfali', मूंगफली: 'Moongfali',
+  soyabean: 'Soyabean', soybean: 'Soyabean', सोयाबीन: 'Soyabean',
+  surajmukhi: 'Surajmukhi', sunflower: 'Surajmukhi', सूरजमुखी: 'Surajmukhi',
+  kela: 'Kela', banana: 'Kela', केला: 'Kela',
+  santra: 'Santra', citrus: 'Santra', orange: 'Santra', संतरा: 'Santra',
+  anaar: 'Anaar', pomegranate: 'Anaar', अनार: 'Anaar',
+  papita: 'Papita', papaya: 'Papita', पपीता: 'Papita',
+  baingan: 'Baingan', brinjal: 'Baingan', eggplant: 'Baingan', बैंगन: 'Baingan',
+  bhindi: 'Bhindi', okra: 'Bhindi', okra: 'Bhindi', भिंडी: 'Bhindi',
+  kheera: 'Kheera', cucumber: 'Kheera', खीरा: 'Kheera',
+  lehsun: 'Lehsun', garlic: 'Lehsun', लहसुन: 'Lehsun',
+  jowar: 'Jowar', sorghum: 'Jowar', ज्वार: 'Jowar',
+  bajra: 'Bajra', 'pearl millet': 'Bajra', बाजरा: 'Bajra',
+  jau: 'Jau', barley: 'Jau', जौ: 'Jau',
+  masoor: 'Masoor', lentil: 'Masoor', मसूर: 'Masoor',
+  angoor: 'Angoor', grape: 'Angoor', अंगूर: 'Angoor',
+  guava: 'Guava', अमरूद: 'Guava', ber: 'Ber', बेर: 'Ber'
 };
 
 function normalizeCrop(name = '') {
@@ -181,6 +206,288 @@ const DISEASE_KNOWLEDGE = [
     chemical_hi: '• कॉपर ऑक्सीक्लोराइड 50% WP — 3 ग्राम/लीटर या Carbendazim 50% WP — 1 ग्राम/लीटर।\n• Mancozeb 75% WP — 2.5 ग्राम/लीटर। फल पकने के 15-20 दिन पहले अंतिम छिड़काव।',
     prevention_hi: '• disease-free क्षेत्र से कलम/बीज लें।\n• Monsoon में copper spray बढ़ाएं — नमी में anthracnose फैलता है।\n• Post-harvest: रोगग्रस्त फल अलग रखें।',
     source: 'ICAR-राष्ट्रीय आम अनुसंधान केंद्र (ICAR-NRC on Mango), लखनऊ'
+  },
+
+  // ── Potato / Aloo ─────────────────────────────────────────────
+  {
+    id: 'potato_late_blight',
+    crop: 'Aloo',
+    name_en: 'Late Blight',
+    name_hi: 'आलू का लेट ब्लाइट (देर-झुलसा रोग)',
+    aliases: ['late blight', 'phytophthora', 'लेट ब्लाइट', 'आलू का झुलसा'],
+    symptoms_hi: 'पत्तियों व डंठल पर पानी-भरे भूरे धब्बे जो ठंड-नमी में तेज़ी से बढ़ते हैं; underside पर सफेद फफूंद; कंद सड़कर सड़न फैलती है।',
+    organic_hi: '• रोगग्रस्त पत्तियों को तुरंत हटाएं व न जलाएं।\n• नीम तेल + छाछ आधारित छिड़काव (5 मिली/लीटर) सहायक है।\n• ट्राइकोडेर्मा हैरज़ियनम जीवामृत 10-15 दिन के अंतराल पर छिड़कें।',
+    chemical_hi: '• मैंकोज़ेब 75% WP — 2.5-3 ग्राम/लीटर या Metalaxyl+Mancozeb — लेबल दर से।\n• नमी के मौसम में 7-10 दिन के अंतराल पर दोहराएं।',
+    prevention_hi: '• blight-रोधी किस्में: कुफरी ज्योति, hills की र դեպ।\n• बीज कंद disease-free रखें; 2% कॉपर सल्फेट घोल में डुबोकर लगाएं।\n• अधिक पानी न दें — कंद सड़न रोकें।',
+    source: 'ICAR-भारतीय आलू अनुसंधान संस्थान (ICAR-CPRI), शिमला एवं PAU, लुधियाना'
+  },
+  {
+    id: 'potato_early_blight',
+    crop: 'Aloo',
+    name_en: 'Early Blight',
+    name_hi: 'आलू का अर्ली ब्लाइट (जल्दी-झुलसा)',
+    aliases: ['early blight', 'alternaria', 'अर्ली ब्लाइट'],
+    symptoms_hi: 'पत्तियों पर गोलाकार भूरे धब्बे जिनके चारों ओर पीला घेरा; धब्बे बड़े होकर पत्ती झुलसा देती हैं; कंद पर सतही धब्बे।',
+    organic_hi: '• संतुलित पोषण — पोटाश की कमी रोग बढ़ाती है।\n• नीम खली/क noz के किचन से जीवामृत बनाएं और छिड़कें।',
+    chemical_hi: '• मैंकोज़ेब 75% WP — 2.5 ग्राम/लीटर, या क्लोरोथैलोनिल — लेबल दर से। 10-12 दिन बाद दोहराएं।',
+    prevention_hi: '• गहरी जुताई व फसल चक्र अपनाएं।\n• रोगग्रस्त अवशेष न जलाएं।\n• प्रतिरोधी किस्में चुनें।',
+    source: 'ICAR-भारतीय आलू अनुसंधान संस्थान (ICAR-CPRI), शिमला'
+  },
+
+  // ── Tomato / Tamatar ──────────────────────────────────────────
+  {
+    id: 'tomato_early_blight',
+    crop: 'Tamatar',
+    name_en: 'Early Blight',
+    name_hi: 'टमाटर का अर्ली ब्लाइट',
+    aliases: ['tomato early blight', 'alternaria tomato', 'टमाटर झुलसा'],
+    symptoms_hi: 'पत्तियों पर गोल भूरे धब्बे पीले घेरों के साथ; पुरानी पत्तियां नीचे से सूखती हैं; फलों पर गहरे धब्बे व त्वचा छिलकना।',
+    organic_hi: '• नीम तेल (5 मिली/लीटर) + छाछ (100 मिली/लीटर) छिड़काव।\n• ट्राइकोडेर्मा आधारित जीवामृत 15 दिन के अंतराल पर।',
+    chemical_hi: '• मैंकोज़ेब 75% WP — 2.5-3 ग्राम/लीटर या Difenoconazole — लेबल दर से। 10 दिन बाद दोहराएं।',
+    prevention_hi: '• पादपों के बीच दूरी रखें — हवा का संचलन हो।\n• रोगग्रस्त पत्तियां तुरंत हटाएं।\n• पॉलीहाउस/स्थिरी क्षेत्र में जल न रखें।',
+    source: 'Punjab Agricultural University (PAU), लुधियाना एवं ICAR-IIHR, हैदराबाद'
+  },
+  {
+    id: 'tomato_late_blight',
+    crop: 'Tamatar',
+    name_en: 'Late Blight',
+    name_hi: 'टमाटर का लेट ब्लाइट',
+    aliases: ['tomato late blight', 'late blight tomato', 'फाइटोफ्थोरा'],
+    symptoms_hi: 'पत्तियों व तनों पर जल-भरे भूरे धब्बे जो नमी में पूरे पौधे पर फैलते हैं; फल पर गहरे धब्बे; सफेद फफूंद underside पर।',
+    organic_hi: '• रोगग्रस्त भाग तुरंत हटाएं।\n• पोटाश बढ़ाएं — रोग-सहिष्णुता बढ़ती है।\n• लेकिन आस-पास के पौधों पर भी कॉपर स्प्रे करें।',
+    chemical_hi: '• मैंकोज़ेब + Metalaxyl मिक्स — लेबल दर से।\n• नमी के मौसम में 7 दिन के अंतराल पर छिड़काव।',
+    prevention_hi: '• पौध-रोपाई से पहले मिट्टी सौर-ताप से गर्म करें।\n• नीचलेपन वाली भूमि में जल निकासी करें।\n• disease-free पौधे ही लगाएं।',
+    source: 'Punjab Agricultural University (PAU), लुधियाना'
+  },
+
+  // ── Cotton / Kapas ────────────────────────────────────────────
+  {
+    id: 'cotton_bacterial_blight',
+    crop: 'Kapas',
+    name_en: 'Bacterial Blight',
+    name_hi: 'कपास का जीवाणु झुलसा',
+    aliases: ['bacterial blight cotton', 'xanthomonas cotton', 'कपास का झुलसा'],
+    symptoms_hi: 'पत्तियों पर पानी-भरे धब्बे जो बाद में काले-भूरे हो जाते हैं; तने पर गहरे धब्बे; पौधा रौनक खोकर सूखता है।',
+    organic_hi: '• रोगग्रस्त पौधे उखाड़कर न जलाएं।\n• नीम 5 मिली/लीटर + छाछ 100 मिली/लीटर छिड़काव।',
+    chemical_hi: '• स्ट्रेप्टोसाइक्लिन सल्फेट — लेबल दर से (500-750 ग्राम/एकड़)।\n• या कॉपर ऑक्सीक्लोराइड 3 ग्राम/लीटर।',
+    prevention_hi: '• disease-free बीज चुनें; बीज को 50°C गर्म पानी में 10 मिनट उपचारित करें।\n• प्रतिरोधी किस्में लगाएं।\n• घनी बुवाई से बचें।',
+    source: 'ICAR-केंद्रीय कपास अनुसंधान संस्थान (ICAR-CICR), नागपुर'
+  },
+  {
+    id: 'cotton_bollworm',
+    crop: 'Kapas',
+    name_en: 'Pink Bollworm / Bollworm',
+    name_hi: 'कपास का गुलाबी तंबाकू छेदक (बोलवर्म)',
+    aliases: ['bollworm', 'pink bollworm', 'tobacco caterpillar', 'बोलवर्म', 'तंबाकू कीट'],
+    symptoms_hi: 'फूलों व कीटाणुओं में छेद; झंडा गिरे पत्ते; boll पर छेद व अंदर कीड़ा; कपास की मात्रा व गुणवत्ता कम।',
+    organic_hi: '• ट्राइकोग्रामा भिवेवी / कॉरीकरण mannequin से जैविक नियंत्रण।\n• Neem-based insecticide + BT cotton किस्में।\n•$field में नीम की पत्तियां/गुड़ का प्रलोभन kullancrognostic करें।',
+    chemical_hi: '• Emamectin benzoate 5% SG — 80-100 ग्राम/एकड़ (500-750 लीटर पानी में)।\n• या Chlorantraniliprole 18.5% SC — 150-200 मिली/एकड़। 15 दिन बाद दोहराएं।',
+    prevention_hi: '• BT-कपास किस्में लगाएं (BG-II/BG-III)।\n• फसल चक्र अपनाएं — कपास के बाद तिलहन/दलहन।\n• हर 7-10 दिन की scouting से शुरुआती कीट-नियंत्रण tránh करें।',
+    source: 'ICAR-केंद्रीय कपास अनुसंधान संस्थान (ICAR-CICR), नागपुर एवं KVK'
+  },
+
+  // ── Sugarcane / Ganna ─────────────────────────────────────────
+  {
+    id: 'sugarcane_red_rot',
+    crop: 'Ganna',
+    name_en: 'Red Rot',
+    name_hi: 'गन्ने की लाल सड़न (Red Rot)',
+    aliases: ['red rot', 'red rot sugarcane', 'लाल सड़न'],
+    symptoms_hi: 'तने में लाल-भूरे धब्बे; तना काटने पर भीतर लाल-सफेद अनाज;Internal Tissue लाल व आयनाइज़्ड; गन्ना कोमल व सुगंधहीन।',
+    organic_hi: '• रोगग्रस्त डंठल तुरंत उखाड़ें व जलाएं।\n• सेट-ट्यूब के बीज का चयन करें; 50°C पानी में 10 मिनट उपचारित करें।',
+    chemical_hi: '• Propiconazole 25% EC — 1 मिली/लीटर या Carbendazim — बीज उपचार हेतु।',
+    prevention_hi: '• disease-free बोसे की टुकड़ी/सेट-ट्यूब से ही बुवाई करें।\n• 2-3 वर्ष फसल चक्र अपनाएं।\n• जल भराव न रखें।',
+    source: 'ICAR-भारतीय गन्ना अनुसंधान संस्थान (ICAR-IISR), लखनऊ'
+  },
+  {
+    id: 'sugarcane_top_borer',
+    crop: 'Ganna',
+    name_en: 'Top Borer',
+    name_hi: 'गन्ने का शीर्ष भेदक (Top Borer)',
+    aliases: ['top borer', 'sugarcane borer', 'शीर्ष भेदक'],
+    symptoms_hi: 'पत्तियों का शीर्ष सूखकर मुड़ना (dead heart); छेद से कीट-मल बाहर; तने में टनल; उपज में भारी गिरावट।',
+    organic_hi: '• झंडे/फंदे से नर कीट पकड़ें।\n• ट्राइकोग्रामा klebari के अंडे पर छोड़ें।\n• नीम-based पेस्ट तने पर लगाएं।',
+    chemical_hi: '• Emamectin benzoate 5% SG — 100-125 ग्राम/एकड़, या Chlorpyriphos 20% EC — 1.5-2 लीटर/एकड़।',
+    prevention_hi: '• 15-20 दिन की scouting करें।\n• resistant किस्में लगाएं।\n• फसल चक्र व फसल अवशेष न जलाएं।',
+    source: 'ICAR-भारतीय गन्ना अनुसंधान संस्थान (ICAR-IISR), लखनऊ एवं STATE KVK'
+  },
+
+  // ── Pulses ────────────────────────────────────────────────────
+  {
+    id: 'chickpea_wilt',
+    crop: 'Chana',
+    name_en: 'Wilt / Fusarium Wilt',
+    name_hi: 'चना की मुरझानी (Wilt रोग)',
+    aliases: ['chickpea wilt', 'fusarium wilt chana', 'चना मुरझाना', 'wilting'],
+    symptoms_hi: 'पौधा अचानक मुरझाकर सूख जाता है — जड़ें भूरी व सड़ी; तने के आधार पर गहरा धब्बा; पैदावार में भारी गिरावट।',
+    organic_hi: '• सड़ी गोबर खाद + ट्राइकोडेर्मा हैरज़ियनम जीवामृत बुवाई से पहले।\n• रोगग्रस्त पौधे उखाड़कर न जलाएं — मिट्टी से हटा दें।',
+    chemical_hi: '• Carbendazim 50% WP — बीज उपचार 2 ग्राम/किग्रा बीज, या Trichoderma harzianum — 10 ग्राम/किग्रा बीज।',
+    prevention_hi: '• late sowing से बचें — Fusarium गर्म मिट्टी में फैलता है।\n• फसल चक्र: चना के बाद चना न लगाएं।\n• deep summer ploughing से मिट्टी में रोगाणु नष्ट।',
+    source: 'ICAR-भारतीय दलहन अनुसंधान संस्थान (ICAR-IIPR), कानपुर एवं PAU, लुधियाना'
+  },
+  {
+    id: 'pigeonpea_wilt',
+    crop: 'Arhar',
+    name_en: 'Fusarium Wilt',
+    name_hi: 'अरहर की मुरझानी (Fusarium Wilt)',
+    aliases: ['pigeonpea wilt', 'arhar wilt', 'अरहर मुरझाना', 'toor wilt'],
+    symptoms_hi: 'एक-एक पौधा अचानक मुरझाता है —;xylem में भूरी रेखा; जड़ें सड़ी व काली; पौधा हरा दिखने के बावजूद गिर जाता है।',
+    organic_hi: '• Trichoderma + Pseudomonas जीवामृत बीज व मिट्टी में।\n• रोगग्रस्त पौधे तुरंत हटा दें।',
+    chemical_hi: '• Carbendazim बीज उपचार + soil drench — लेबल दर से।',
+    prevention_hi: '• wilt-रोधी किस्में: IPA-09-37, Maruti।\n• फसल चक्र: अरहर के बाद अरहर न लगाएं।\n• खेत में जल निकासी सुनिश्चित करें।',
+    source: 'ICAR-भारतीय दलहन अनुसंधान संस्थान (ICAR-IIPR), कानपुर'
+  },
+  {
+    id: 'mungbean_yellow_mosaic',
+    crop: 'Moong',
+    name_en: 'Yellow Mosaic Virus',
+    name_hi: 'मूंग का पीला मोज़ेक वायरस',
+    aliases: ['yellow mosaic', 'mosaic virus moong', 'पीला मोजेक'],
+    symptoms_hi: 'पत्तियों पर पीले-हरे मोज़ेक धब्बे; पत्तियां सिकुड़कर छोटी; फली व दाना नहीं बनता; पौधा बौना रह जाता है।',
+    organic_hi: '• सफेद मक्खी (vector) को नियंत्रित करें — पीले चिपचिपे पत्ते पर पानी से धोएं।\n• नीम oil based insecticide छिड़कें।',
+    chemical_hi: '•vector नियंत्रण: Imidacloprid 17.8% SL — 150-200 मिली/एकड़, या Acetamiprid — लेबल दर से।',
+    prevention_hi: '• Resistant किस्में: HUM-16, Pusa Vishal।\n• जल्दी बुवाई (जुलाई के पहले सप्ताह) — WHITEFLY (सफेद मक्खी) के प्रकोप से बचें।\n• घनी बुवाई से बचें।',
+    source: 'ICAR-भारतीय दलहन अनुसंधान संस्थान (ICAR-IIPR), कानपुर एवं KVK'
+  },
+
+  // ── Oilseeds / Commercial ─────────────────────────────────────
+  {
+    id: 'groundnut_tikka',
+    crop: 'Moongfali',
+    name_en: 'Tikka Leaf Spot',
+    name_hi: 'मूंगफली का टिक्का रोग',
+    aliases: ['tikka', 'tikka leaf spot', 'groundnut tikka', 'टिक्का'],
+    symptoms_hi: 'पत्तियों पर गहरे भूरे-लाल उभरे धब्बे (tikka); धब्बे के चारों ओर पीला घेरा; पत्ती सूखकर गिरती है; underground Pods सड़ते हैं।',
+    organic_hi: '• सड़ी गोबर खाद + ट्राइकोडेर्मा जीवामृत।\n• नीम oil 5 मिली/लीटर छिड़काव।',
+    chemical_hi: '• Chlorothalonil 75% WP — 2 ग्राम/लीटर या Hexaconazole 5% EC — 2 मिली/लीटर। 10-15 दिन बाद दोहराएं।',
+    prevention_hi: '• disease-free बीज चुनें।\n• घनी बुवाई से बचें;_field में जल निकासी करें।\n• फसल चक्र अपनाएं।',
+    source: 'ICAR-ICRISAT, हैदराबाद एवं Punjab Agricultural University (PAU), लुधियाना'
+  },
+  {
+    id: 'soybean_rust',
+    crop: 'Soyabean',
+    name_en: 'Soybean Rust',
+    name_hi: 'सोयाबीन का रस्ट रोग',
+    aliases: ['soybean rust', 'phakopsora', 'सोयाबीन रस्ट'],
+    symptoms_hi: 'पत्तियों की ऊपरी सतह पर छोटे भूरे-लाल उभरे धब्बे; underside पर हल्का धूसर पाउडर; पत्तियां जल्दी सूखती हैं; उपज में भारी गिरावट।',
+    organic_hi: '• पोटाश की मात्रा बढ़ाएं।\n• रोगग्रस्त पत्तियां हटाएं।',
+    chemical_hi: '• Propiconazole 25% EC — 200 मिली/एकड़ (200 लीटर पानी में), या Tebuconazole — लेबल दर से।',
+    prevention_hi: '• रोगग्रस्त अवशेष न जलाएं।\n• ICAR-IIOR/ICAR-DEMP की अनुशंसित किस्में चुनें।\n• घनी बुवाई से बचें।',
+    source: 'ICAR-भारतीय तिलहन अनुसंधान संस्थान (ICAR-IIOR), हैदराबाद'
+  },
+
+  // ── Vegetables ────────────────────────────────────────────────
+  {
+    id: 'brinjal_fsb',
+    crop: 'Baingan',
+    name_en: 'Fruit & Shoot Borer',
+    name_hi: 'बैंगन का फल व तना भेदक',
+    aliases: ['fruit shoot borer', 'brinjal borer', 'शूट बोरर', 'फल भेदक'],
+    symptoms_hi: 'तने व फलों में छेद; अंदर कीड़ा; पत्तियां बासी होकर गिरती हैं; फलों में कीट-मल; उपज में भारी गिरावट।',
+    organic_hi: '•pheromone ट्रैप लगाएं।\n• नीम oil based insecticide + BT (Bacillus thuringiensis) छिड़काव।\n• रोगग्रस्त फल/पौधे तुरंत हटाएं।',
+    chemical_hi: '• Emamectin benzoate 5% SG — 80-100 ग्राम/एकड़ या Chlorantraniliprole 18.5% SC — 150-200 मिली/एकड़।',
+    prevention_hi: '• pheromone ट्रैप 4-5/एकड़ लगाएं।\n• रोगग्रस्त भाग हटाएं।\n• 7-10 दिन की scouting करें।',
+    source: 'ICAR-भारतीय सब्जी अनुसंधान संस्थान (ICAR-IIHR), हैदराबाद एवं STATE KVK'
+  },
+  {
+    id: 'bhindi_yvmv',
+    crop: 'Bhindi',
+    name_en: 'Yellow Vein Mosaic Virus',
+    name_hi: 'भिंडी का पीली नस मोज़ेक वायरस',
+    aliases: ['yellow vein mosaic', 'bhindi mosaic', 'पीली नस'],
+    symptoms_hi: 'पत्तियों पर पीली नसें (veins); पत्तियां बारीक व सिकुड़ी; फल छोटा व विकृत; उपज में भारी गिरावट।',
+    organic_hi: '• सफेद मक्खी (vector) को नियंत्रित करें।\n• नीम oil + स्टिकी ट्रैप।',
+    chemical_hi: '•vector नियंत्रण: Imidacloprid या Acetamiprid — लेबल दर से।',
+    prevention_hi: '• Resistant किस्में: Arka Anamika, VRO-6।\n• जल्दी बुवाई।\n• खेत में घनी बुवाई से बचें।',
+    source: 'ICAR-IIHR, हैदराबाद एवं ICAR-IIVR, वाराणसी'
+  },
+  {
+    id: 'cucumber_downy_mildew',
+    crop: 'Kheera',
+    name_en: 'Downy Mildew',
+    name_hi: 'खीरे का डाउन मिल्ड्यू (पत्ती फफूंद)',
+    aliases: ['downy mildew cucumber', 'downy mildew', 'डाउन मिल्ड्यू', 'पत्ती फफूंद'],
+    symptoms_hi: 'पत्तियों की ऊपरी सतह पर पीले धब्बे; underside पर काले-बैंगनी फफूंद; पत्तियां जल्दी सूखती हैं; फसल बर्बाद होती है।',
+    organic_hi: '• पानी की अधिकता न दें — नमी में रोग फैलता है।\n• नीम oil 5 मिली/लीटर छिड़काव।',
+    chemical_hi: '• Metalaxyl + Mancozeb मिक्स — लेबल दर से, या Copper oxychloride 3 ग्राम/लीटर।',
+    prevention_hi: '• field में जल निकासी करें।\n• रोगग्रस्त पत्तियां तुरंत हटाएं।\n• disease-free बीज चुनें।',
+    source: 'ICAR-IIHR, हैदराबाद एवं ICAR-IIVR, वाराणसी'
+  },
+
+  // ── Plantation / Fruits ───────────────────────────────────────
+  {
+    id: 'banana_sigatoka',
+    crop: 'Kela',
+    name_en: 'Sigatoka / Leaf Spot',
+    name_hi: 'केले का सिगाटोका / पत्ती धब्बा रोग',
+    aliases: ['sigatoka', 'banana leaf spot', 'sigaoka', 'केले का धब्बा'],
+    symptoms_hi: 'पत्तियों पर भूरे-लाल धब्बे जो लंबे होते हैं; पत्तियां जल्दी सूखती हैं; फल की गुणवत्ता व मात्रा में गिरावट; पौधा कमजोर।',
+    organic_hi: '• पत्तियों के बीच दूरी रखें — हवा का संचलन हो।\n• नीम oil + छाछ छिड़काव।',
+    chemical_hi: '• Mancozeb 75% WP — 2.5-3 ग्राम/लीटर या Propiconazole — लेबल दर से। 15 दिन बाद दोहराएं।',
+    prevention_hi: '• disease-free suckers से बाग लगाएं।\n• पुरानी पत्तियां हटाएं — फफूंद वहीं पनपती है।\n•_field में जल निकासी करें।',
+    source: 'ICAR-राष्ट्रीय केला अनुसंधान केंद्र (ICAR-NRC on Banana), त्रिची'
+  },
+  {
+    id: 'citrus_canker',
+    crop: 'Santra',
+    name_en: 'Citrus Canker',
+    name_hi: 'संतरे का कैंसर रोग',
+    aliases: ['citrus canker', 'canker', 'कैंसर', 'संतरे का कैंसर'],
+    symptoms_hi: 'पत्तियों व फलों पर उभरे भूरीBorders वाले धब्बे; छिलके पर धब्बे; पत्तियां झड़ती हैं; फल विकृत होते हैं।',
+    organic_hi: '• कॉपर ऑक्सीक्लोराइड + नीम oil का मिश्रण छिड़कें।\n• रोगग्रस्त भाग करें।',
+    chemical_hi: '• Copper oxychloride 50% WP — 3 ग्राम/लीटर + Streptocycline — लेबल दर से।',
+    prevention_hi: '• disease-free पौधे लगाएं।\n• pruning के tools को 1% formalin/bleach से disinfect करें।\n•_field में घनी बुवाई से बचें।',
+    source: 'ICAR-राष्ट्रीय खट्टे फल अनुसंधान संस्थान (ICAR-NRC on Citrus), नागपुर एवं PAU, लुधियाना'
+  },
+  {
+    id: 'papaya_ringspot',
+    crop: 'Papita',
+    name_en: 'Ringspot Virus',
+    name_hi: 'पपीते का रिंगस्पॉट वायरस',
+    aliases: ['ringspot', 'papaya ringspot', 'पपीता वायरस', 'rsv'],
+    symptoms_hi: 'पत्तियों पर हल्के हरे व गहरे हरे के वलय (rings); तना व फल पर धब्बे; पौधा बौना व कमजोर; फल विकृत।',
+    organic_hi: '• रोगग्रस्त पौधे तुरंत उखाड़ें व न जलाएं।\n• Aphid vector को नियंत्रित करें।',
+    chemical_hi: '•vector नियंत्रण: Dimethoate या Imidacloprid — लेबल दर से।',
+    prevention_hi: '• disease-free पौधे लगाएं।\n• खेत में घनी बुवाई से बचें।\n• प्रतिरोधी किस्में चुनें।',
+    source: 'ICAR-भारतीय बागवानी अनुसंधान संस्थान (ICAR-IIHR), हैदराबाद'
+  },
+
+  // ── Millets / Cereals ─────────────────────────────────────────
+  {
+    id: 'jowar_downy_mildew',
+    crop: 'Jowar',
+    name_en: 'Downy Mildew',
+    name_hi: 'ज्वार का डाउन मिल्ड्यू',
+    aliases: ['downy mildew jowar', 'sorghum downy mildew', 'ज्वार फफूंद'],
+    symptoms_hi: 'पत्तियों पर पीले धब्बे; underside पर सफेद-बैंगनी फफूंद; पौधा बौना व पीलापन; बालियां नहीं बनतीं।',
+    organic_hi: '• disease-free बीज चुनें।\n• नीम oil छिड़काव।',
+    chemical_hi: '• Metalaxyl + Mancozeb मिक्स बीज उपचार, या Copper oxychloride 3 ग्राम/लीटर।',
+    prevention_hi: '• Resistant किस्में लगाएं।\n• खेत में जल निकासी करें।\n• फसल चक्र अपनाएं।',
+    source: 'ICAR-भारतीय बाजरा अनुसंधान संस्थान (ICAR-IIMR), हैदराबाद'
+  },
+  {
+    id: 'bajra_smut',
+    crop: 'Bajra',
+    name_en: 'Smuts',
+    name_hi: 'बाजरे का कंडुआ/स्मट रोग',
+    aliases: ['smut bajra', 'pearl millet smut', 'कंडुआ', 'स्मट'],
+    symptoms_hi: 'बाजरे के बालियों में काले-भूरे पाउडर (smut spores); बालियां काली व विकृत; उपज में भारी गिरावट।',
+    organic_hi: '• disease-free बीज चुनें।\n• बीज को गर्म पानी (50-52°C) में 10 मिनट उपचारित करें।',
+    chemical_hi: '• Captan 50% WP — बीज उपचार 2.5 ग्राम/किग्रा बीज।',
+    prevention_hi: '• disease-free बीज ही बुवाई करें।\n•_field में घनी बुवाई से बचें।\n• फसल चक्र अपनाएं।',
+    source: 'ICAR-भारतीय बाजरा अनुसंधान संस्थान (ICAR-IIMR), हैदराबाद'
+  },
+  {
+    id: 'barley_leaf_rust',
+    crop: 'Jau',
+    name_en: 'Leaf Rust / Net Blotch',
+    name_hi: 'जौ का पत्ती रस्ट / नेट ब्लॉच',
+    aliases: ['barley rust', 'leaf rust barley', 'जौ रस्ट', 'नेट ब्लॉच'],
+    symptoms_hi: 'पत्तियों पर भूरे-लाल उभरे धब्बे; धब्बे के चारों ओर पीला घेरा; पत्तियां जल्दी सूखती हैं; बालियों में दाना हल्का।',
+    organic_hi: '• पोटाश की मात्रा बढ़ाएं।\n• रोगग्रस्त पत्तियां हटाएं।',
+    chemical_hi: '• Propiconazole 25% EC — 200 मिली/एकड़ या Tebuconazole — लेबल दर से।',
+    prevention_hi: '• Resistant किस्में चुनें।\n• disease-free बीज।\n•_field में जल निकासी करें।',
+    source: 'ICAR-भारतीय गेहूं एवं जौ अनुसंधान संस्थान (ICAR-IIWBR), करनाल'
   }
 ];
 

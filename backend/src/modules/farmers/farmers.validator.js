@@ -18,7 +18,7 @@ const BIHAR_DISTRICTS = [
 ];
 
 // ── Valid crop types ──
-const VALID_CROPS = ['Makhana', 'Dhan', 'Makka', 'Gehun', 'Sarson', 'Sabzi', 'Anya'];
+const VALID_CROPS = ['Makhana', 'Dhan', 'Makka', 'Gehun', 'Sarson', 'Sabzi', 'Aloo', 'Tamatar', 'Kapas', 'Ganna', 'Chana', 'Arhar', 'Moong', 'Moongfali', 'Soyabean', 'Jowar', 'Bajra', 'Jau', 'Kela', 'Santra', 'Papita', 'Baingan', 'Bhindi', 'Kheera', 'Anya'];
 
 // ── Farmer categories per Bihar agricultural records ──
 const FARMER_CATEGORIES = ['marginal', 'small', 'medium', 'large'];
@@ -141,16 +141,21 @@ const completeProfileSchema = z.object({
     .string()
     .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number'),
 
+  // -- Pan-India geography (LGD codes preferred; names required) --
+  state: z.string().max(150).optional().nullable(),
+  state_code: geoCodeSchema,
+  district_code: geoCodeSchema,
+  subdistrict_code: geoCodeSchema,
+
   district: z
     .string()
-    .refine((d) => BIHAR_DISTRICTS.includes(d), {
-      message: 'Please select a valid Bihar district',
-    }),
+    .min(2, 'District is required')
+    .max(150, 'District name too long'),
 
   block: z
     .string()
-    .min(2, 'Block name required')
-    .max(100, 'Block name too long'),
+    .min(2, 'Sub-district / block is required')
+    .max(150, 'Sub-district name too long'),
 
   land_size_kattha: katthaSchema,
 

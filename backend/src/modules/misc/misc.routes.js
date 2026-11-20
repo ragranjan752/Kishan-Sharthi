@@ -11,13 +11,18 @@ const { authenticate, optionalAuth } = require('../../middleware/auth');
 const { BIHAR_DISTRICTS, BLOCKS_BY_DISTRICT, KATTHA_PER_BIGHA, SQFT_PER_KATTHA } = require('../../data/biharLocations');
 const { z } = require('zod');
 
-// ── Fertilizer Catalog with Statutory Regulated Prices ──
+// ── Fertilizer & Input Catalog with Statutory Regulated Prices ──
 const FERTILIZER_PRODUCTS = [
   { id: 1, name: 'नीम लेपित यूरिया (Neem Coated Urea 45kg)', category: 'Fertilizers', icon: '💎', seller: 'प्राथमिक कृषि साख समिति (PACS)', distance: '1.5 km', price: 266.5, unit: 'bag', badge: 'govt_rate' },
   { id: 2, name: 'डीएपी (DAP 18:46:0 50kg)', category: 'Fertilizers', icon: '🧪', seller: 'इफको ई-बाजार (IFFCO)', distance: '2.8 km', price: 1350, unit: 'bag', badge: 'govt_rate' },
   { id: 3, name: 'म्यूरिएट ऑफ पोटाश (MOP 50kg)', category: 'Fertilizers', icon: '🔬', seller: 'किसान सेवा केंद्र', distance: '3.1 km', price: 1100, unit: 'bag', badge: 'subsidy' },
   { id: 4, name: 'जिंक सल्फेट मोनोहाइड्रेट (33% Zn 10kg)', category: 'MicroNutrients', icon: '🔩', seller: 'कृषि विकास केंद्र', distance: '2.0 km', price: 420, unit: 'pack', badge: 'recommended' },
-  { id: 5, name: 'जैविक ट्राइकोडर्मा विरिडी (Bio Trichoderma 1kg)', category: 'Organic', icon: '🌿', seller: 'जैविक इनपुट केंद्र', distance: '4.5 km', price: 180, unit: 'kg', badge: 'organic' }
+  { id: 5, name: 'जैविक ट्राइकोडर्मा विरिडी (Bio Trichoderma 1kg)', category: 'Organic', icon: '🌿', seller: 'जैविक इनपुट केंद्र', distance: '4.5 km', price: 180, unit: 'kg', badge: 'organic' },
+  { id: 6, name: 'गेहूं बीज HD-2967 (प्रमाणित 40kg)', category: 'Seeds', icon: '🌾', seller: 'बिहार राज्य बीज निगम (BRBN)', distance: '3.8 km', price: 1850, unit: 'bag', badge: 'govt_rate' },
+  { id: 7, name: 'मक्का हाइब्रिड बीज Pioneer P3396 (4kg)', category: 'Seeds', icon: '🌽', seller: 'कृषि सेवा केंद्र', distance: '2.2 km', price: 1150, unit: 'pack', badge: 'recommended' },
+  { id: 8, name: 'नीम तेल कीटनाशक (Azadirachtin 10000 ppm)', category: 'Pesticides', icon: '🧴', seller: 'जैविक पौध संरक्षण केंद्र', distance: '4.0 km', price: 420, unit: 'ltr', badge: 'organic' },
+  { id: 9, name: 'क्लोरांट्रानिलिप्रोल 18.5% SC (कोराजन 60ml)', category: 'Pesticides', icon: '💊', seller: 'एग्रो केमिकल स्टोर', distance: '1.9 km', price: 650, unit: 'bottle', badge: '' },
+  { id: 10, name: 'वर्मीकम्पोस्ट जैविक खाद (50kg)', category: 'Organic', icon: '🪱', seller: 'जैविक कृषि फार्म, बिहटा', distance: '5.0 km', price: 350, unit: 'bag', badge: 'organic' }
 ];
 
 const tracesMemoryStore = new Map();
@@ -47,7 +52,17 @@ router.get('/meta/locations', (req, res) => {
 
 // GET /api/v1/products
 router.get('/products', (req, res) => {
-  return sendSuccess(res, FERTILIZER_PRODUCTS, 'उर्वरक एवं इनपुट सूची');
+  const category = req.query.category;
+  let products = FERTILIZER_PRODUCTS;
+  if (category && category !== 'All') {
+    products = products.filter(p => p.category.toLowerCase() === category.toLowerCase());
+  }
+  return res.json({
+    success: true,
+    data: products,
+    products: products,
+    message: 'उर्वरक एवं इनपुट सूची'
+  });
 });
 
 // POST /api/v1/trace/generate

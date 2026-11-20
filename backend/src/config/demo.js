@@ -19,6 +19,7 @@ function demoProfile() {
     name: 'Rajesh Kumar',
     email: 'demo@krishisarthi.local',
     phone: '9999999999',
+    state: 'Bihar',
     district: 'Darbhanga',
     block: 'Baheri',
     village: 'Demo Village',

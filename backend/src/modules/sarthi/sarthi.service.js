@@ -16,6 +16,14 @@ const RESPONSE_LANGUAGES = {
   bhojpuri: 'भोजपुरी',
   mai: 'मैथिली',
   maithili: 'मैथिली',
+  pa: 'ਪੰਜਾਬੀ',
+  punjabi: 'ਪੰਜਾਬੀ',
+  te: 'తెలుగు',
+  telugu: 'తెలుగు',
+  mr: 'मराठी',
+  marathi: 'मराठी',
+  ta: 'தமிழ்',
+  tamil: 'தமிழ்',
   hinglish: 'Hinglish (Hindi-English mix)'
 };
 
@@ -44,11 +52,14 @@ function buildSystemPrompt(farmer, verifiedContext, responseLang) {
 ${contextBlock}`;
 }
 
-async function processFarmerChat({ message, farmer = {}, sessionId = null, lang = null }) {
+async function processFarmerChat({ message, farmer = {}, sessionId = null, lang = null, context = null }) {
   const detectedLang = detectLanguage(message);
   const responseLang = RESPONSE_LANGUAGES[lang] ? lang : detectedLang;
   const verifiedContext = retrieveVerifiedContext(message, farmer);
-  const systemPrompt = buildSystemPrompt(farmer, verifiedContext, responseLang);
+  let systemPrompt = buildSystemPrompt(farmer, verifiedContext, responseLang);
+  if (context) {
+    systemPrompt += `\n\n[संदर्भ: किसान ने अभी इस फसल रोग जांच के बारे में पूछा है — ${context}. कृपया उसी निदान, फसल एवं उपचार के संदर्भ में उत्तर दें।]`;
+  }
 
   // Attempt multi-provider AI generation
   let aiResult = await generateAgriAdvice(systemPrompt, message);
@@ -60,12 +71,39 @@ async function processFarmerChat({ message, farmer = {}, sessionId = null, lang 
     providerUsed = aiResult.provider;
   } else {
     // Deterministic safe fallback using verified knowledge items
-    if (verifiedContext.length > 0) {
-      const top = verifiedContext[0];
-      replyText = `नमस्ते ${farmer.name || 'किसान भाई'}! आपके क्षेत्र (${farmer.district || 'बिहार'}) एवं फसल से संबंधित प्रामाणिक जानकारी:\n\n**${top.title_hi}**\n${top.content_hi}\n\n📌 *स्रोत: ${top.verified_source}*\n\n(विशेष सहायता हेतु बिहार किसान कॉल सेंटर 1800-180-1551 पर संपर्क करें)`;
-    } else {
-      replyText = `नमस्ते ${farmer.name || 'किसान भाई'}! आपके प्रश्न पर कृषि वैज्ञानिक मानकों के अनुसार सटीक जानकारी जुटाई जा रही है।\n\nबिहार में कृषि योजनाओं व फसल प्रबंधन की तत्काल सहायता के लिए आप राज्य के टोल-फ्री किसान कॉल सेंटर नंबर **1800-180-1551** अथवा अपने नजदीकी **कृषि विज्ञान केंद्र (KVK)** से संपर्क कर सकते हैं।`;
-    }
+    const FALLBACK = {
+      en: {
+        ctx: (n, d, t) => `Hello ${n}! Verified information for your area (${d}) and crop:\n\n**${t.title_hi}**\n${t.content_hi}\n\n📌 *Source: ${t.verified_source}*\n\n(For urgent help, call the farmer helpline 1800-180-1551 or visit your nearest KVK.)`,
+        gen: (n) => `Hello ${n}! I'm gathering accurate, research-backed information for your query.\n\nFor immediate help with schemes and crop management in India, call the toll-free Kisan Call Centre **1800-180-1551** or contact your nearest **Krishi Vigyan Kendra (KVK)**.`
+      },
+      pa: {
+        ctx: (n, d, t) => `ਸਤ ਸ੍ਰੀ ਅਕਾਲ ${n}! ਤੁਹਾਡੇ ਖੇਤਰ (${d}) ਅਤੇ ਫਸਲ ਲਈ ਪ੍ਰਮਾਣਿਤ ਜਾਣਕਾਰੀ:\n\n**${t.title_hi}**\n${t.content_hi}\n\n📌 *ਸਰੋਤ: ${t.verified_source}*\n\n(ਤੁਰੰਤ ਮਦਦ ਲਈ 1800-180-1551 ‘ਤੇ ਕਾਲ ਕਰੋ ਜਾਂ ਨੇੜਲੇ KVK ‘ਤੇ ਜਾਓ।)`,
+        gen: (n) => `ਸਤ ਸ੍ਰੀ ਅਕਾਲ ${n}! ਮੈਂ ਤੁਹਾਡੇ ਸਵਾਲ ਲਈ ਸਹੀ, ਖੋਜ-ਅਧਾਰਿਤ ਜਾਣਕਾਰੀ ਇਕੱਠੀ ਕਰ ਰਿਹਾ/ਰਹੀ ਹਾਂ।\n\nਤੁਰੰਤ ਮਦਦ ਲਈ **1800-180-1551** ‘ਤੇ ਕਾਲ ਕਰੋ ਜਾਂ ਆਪਣੇ ਨੇੜਲੇ **ਕ੍ਰਿਸ਼ੀ ਵਿਗਿਆਨ ਕੇਂਦਰ (KVK)** ਨਾਲ ਸੰਪਰਕ ਕਰੋ।`
+      },
+      te: {
+        ctx: (n, d, t) => `నమస్కారం ${n}! మీ ప్రాంతం (${d}) మరియు పంట కోసం ధృవీకరించబడిన సమాచారం:\n\n**${t.title_hi}**\n${t.content_hi}\n\n📌 *మూలం: ${t.verified_source}*\n\n(తక్షణ సహాయం కోసం 1800-180-1551ాకు కాల్ చేయండి లేదా సమీప KVKానికి వెళ్లండి.)`,
+        gen: (n) => `నమస్కారం ${n}! మీ ప్రశ్నకు ఖచ్చితమైన, పరిశోధన-ఆధారిత సమాచారం సేకరిస్తున్నాను.\n\nతక్షణ సహాయం కోసం **1800-180-1551**కు కాల్ చేయండి లేదా సమీప KVKను సంప్రదించండి.`
+      },
+      mr: {
+        ctx: (n, d, t) => `नमस्कार ${n}! तुमच्या भाग (${d}) व पिकासाठी पडताळलेली माहिती:\n\n**${t.title_hi}**\n${t.content_hi}\n\n📌 *स्रोत: ${t.verified_source}*\n\n(तातडीच्या मदतीसाठी 1800-180-1551 वर कॉल करा किंवा जवळच्या KVK ला भेट द्या.)`,
+        gen: (n) => `नमस्कार ${n}! तुमच्या प्रश्नासाठी अचूक, संशोधन-आधारित माहिती गोळा करत आहे.\n\nतातडीच्या मदतीसाठी **1800-180-1551** वर कॉल करा किंवा जवळच्या KVK ला भेट द्या.`
+      },
+      ta: {
+        ctx: (n, d, t) => `வணக்கம் ${n}! உங்கள் பகுதி (${d}) மற்றும் பயிருக்கான சரிபார்க்கப்பட்ட தகவல்:\n\n**${t.title_hi}**\n${t.content_hi}\n\n📌 *மூலம்: ${t.verified_source}*\n\n(அவசர உதவிக்கு 1800-180-1551 அழைக்கவும் அல்லது அருகிலுள்ள KVK-க்கு செல்லவும்.)`,
+        gen: (n) => `வணக்கம் ${n}! உங்கள் கேள்விக்கு துல்லியமான, ஆராய்ச்சி-சார்ந்த தகவலை சேகரிக்கிறேன்.\n\nஅவசர உதவிக்கு **1800-180-1551** அழைக்கவும் அல்லது அருகிலுள்ள KVK-வை அணுகவும்.`
+      },
+      hi: {
+        ctx: (n, d, t) => `नमस्ते ${n}! आपके क्षेत्र (${d}) एवं फसल से संबंधित प्रामाणिक जानकारी:\n\n**${t.title_hi}**\n${t.content_hi}\n\n📌 *स्रोत: ${t.verified_source}*\n\n(विशेष सहायता हेतु किसान कॉल सेंटर 1800-180-1551 पर संपर्क करें)`,
+        gen: (n) => `नमस्ते ${n}! आपके प्रश्न पर कृषि वैज्ञानिक मानकों के अनुसार सटीक जानकारी जुटाई जा रही है।\n\nकृषि योजनाओं व फसल प्रबंधन की तत्काल सहायता के लिए टोल-फ्री **1800-180-1551** अथवा अपने नजदीकी **कृषि विज्ञान केंद्र (KVK)** से संपर्क करें।`
+      }
+    };
+    const langKey = (responseLang === 'en' || responseLang === 'english') ? 'en'
+      : (responseLang === 'hi' || responseLang === 'hindi' || responseLang === 'hinglish') ? 'hi'
+      : (FALLBACK[responseLang] ? responseLang : 'hi');
+    const fb = FALLBACK[langKey];
+    replyText = verifiedContext.length > 0
+      ? fb.ctx(farmer.name || (langKey === 'en' ? 'Farmer' : 'किसान भाई'), farmer.district || (langKey === 'en' ? 'India' : 'बिहार'), verifiedContext[0])
+      : fb.gen(farmer.name || (langKey === 'en' ? 'Farmer' : 'किसान भाई'));
   }
 
   const citations = verifiedContext.map(c => ({
