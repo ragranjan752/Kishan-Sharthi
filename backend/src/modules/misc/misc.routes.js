@@ -10,6 +10,7 @@ const { sendSuccess, sendCreated, errors } = require('../../utils/response');
 const { authenticate, optionalAuth } = require('../../middleware/auth');
 const { BIHAR_DISTRICTS, BLOCKS_BY_DISTRICT, KATTHA_PER_BIGHA, SQFT_PER_KATTHA } = require('../../data/biharLocations');
 const { z } = require('zod');
+const { supabase, isConfigured } = require('../../config/supabase');
 
 // ── Fertilizer & Input Catalog with Statutory Regulated Prices ──
 const FERTILIZER_PRODUCTS = [
@@ -26,6 +27,18 @@ const FERTILIZER_PRODUCTS = [
 ];
 
 const tracesMemoryStore = new Map();
+
+// GET /api/stats/users — public farmer count for landing badge
+router.get('/stats/users', async (req, res) => {
+  try {
+    if (!isConfigured) return sendSuccess(res, { count: 0 }, 'User count');
+    const { count, error } = await supabase.from('farmers').select('id', { count: 'exact', head: true });
+    if (error) throw error;
+    return sendSuccess(res, { count: count || 0 }, 'User count');
+  } catch (e) {
+    return sendSuccess(res, { count: 0 }, 'User count');
+  }
+});
 
 // GET /api/v1/config/public
 router.get('/config/public', (req, res) => {

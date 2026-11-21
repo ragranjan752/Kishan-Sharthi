@@ -37,4 +37,23 @@ router.get('/villages', asyncHandler(async (req, res) => {
   return sendSuccess(res, villages, 'Villages');
 }));
 
+
+// GET /locations/geocode?village=X&subdistrict=Y&district=Z&state=W — resolve to lat/lng via Nominatim
+router.get('/geocode', asyncHandler(async (req, res) => {
+  const { village, subdistrict, district, state } = req.query;
+  const parts = [village, subdistrict, district, state, 'India'].filter(Boolean);
+  if (parts.length < 2) return sendSuccess(res, { lat: null, lng: null }, 'Insufficient location');
+  const q = encodeURIComponent(parts.join(', '));
+  try {
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=in&q=' + q, {
+      headers: { 'User-Agent': 'KisanSarthi/1.0 (agri-assistant)' }
+    });
+    const data = await r.json();
+    if (!data || !data[0]) return sendSuccess(res, { lat: null, lng: null }, 'Location not found');
+    return sendSuccess(res, { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), display: data[0].display_name }, 'Location resolved');
+  } catch (e) {
+    return sendSuccess(res, { lat: null, lng: null }, 'Geocode failed');
+  }
+}));
+
 module.exports = router;

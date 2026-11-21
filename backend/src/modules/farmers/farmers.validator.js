@@ -185,6 +185,16 @@ const updateProfileSchema = z.object({
 
   farmer_category: z.enum(FARMER_CATEGORIES).optional(),
 
+  // Pan-India geography (LGD codes → canonical names)
+  state: z.string().max(100).optional(),
+  state_code: geoCodeSchema,
+  district: z.string().max(100).optional(),
+  district_code: geoCodeSchema,
+  subdistrict: z.string().max(100).optional(),
+  subdistrict_code: geoCodeSchema,
+  village: z.string().max(200).optional().nullable(),
+  village_code: geoCodeSchema,
+
   // Profile photo URL (must come from Firebase/trusted storage)
   profile_image_url: z.string().url('Invalid image URL').optional().nullable(),
 });

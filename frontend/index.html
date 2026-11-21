@@ -102,12 +102,12 @@
         </div>
         <div class="hero-stats">
           <div>
-            <div class="hero-stat-num"></div>
-            <div class="hero-stat-label"></div>
+            <div class="hero-stat-num" id="hero-user-count">…</div>
+            <div class="hero-stat-label">Total Registered Farmers<br><span style="font-size:10px;color:var(--text-muted);">Farmers Joined Kisan Sarthi</span></div>
           </div>
           <div>
-            <div class="hero-stat-num"></div>
-            <div class="hero-stat-label"></div>
+            <div class="hero-stat-num">36</div>
+            <div class="hero-stat-label">States &amp; UTs Covered</div>
           </div>
           <div>
             <div class="hero-stat-num">6</div>
@@ -342,7 +342,7 @@
       <div class="auth-form" id="signup-form">
         <div class="form-row">
           <div class="input-group">
-            <label>Full Name</label>
+            <label="pf_name">Full Name</label>
             <input type="text" id="su-name" placeholder="Enter full name" autocomplete="name">
           </div>
           <div class="input-group">
@@ -543,6 +543,7 @@
   </div>
 
   <!-- ══════════════════ MAIN APP ══════════════════ -->
+  <!-- ══════════════════ MAIN APP ══════════════════ -->
   <div id="app">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
@@ -552,13 +553,6 @@
           <span class="brand-hindi">कृषि सारथी</span>
         </div>
         <button class="sidebar-close-btn" id="sidebar-close-btn" onclick="toggleSidebar(false)" aria-label="Close menu">✕</button>
-      </div>
-      <div class="sidebar-user">
-        <div class="user-avatar" id="sidebar-avatar">K</div>
-        <div class="user-info">
-          <div class="name" id="sidebar-name">Farmer</div>
-          <div class="loc" id="sidebar-loc">📍 Bihar</div>
-        </div>
       </div>
       <nav>
         <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">🏠</span> <span data-i18n="dash">Dashboard</span></div>
@@ -575,7 +569,7 @@
             class="nav-badge">!</span></div>
       </nav>
       <div class="sidebar-bottom">
-        <div class="nav-item" onclick="logout()"><span class="icon">🚪</span> <span data-i18n="logout">Logout</span></div>
+<div class="nav-item" onclick="logout()"><span class="icon">🚪</span> <span data-i18n="logout">Logout</span></div>
       </div>
     </aside>
     <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
@@ -593,8 +587,21 @@
             <p id="page-sub">Good morning, Farmer 🌤</p>
           </div>
         </div>
-        <div class="topbar-right">
-          <select class="lang-select" id="lang-select" onchange="changeLang(this.value)">
+        <div class="topbar-right"><div style="position:relative;">
+            <div class="user-avatar" id="topbar-avatar" onclick="toggleProfileMenu(event)" title="Profile" style="cursor:pointer;width:36px;height:36px;font-size:14px;">K</div>
+            <div id="profile-menu" style="display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);width:240px;z-index:200;overflow:hidden;">
+              <div style="padding:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+                <div id="pm-avatar" class="user-avatar" style="width:40px;height:40px;font-size:15px;flex-shrink:0;">K</div>
+                <div style="min-width:0;">
+                  <div id="pm-name" style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Farmer</div>
+                  <div id="pm-email" style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+                </div>
+              </div>
+              <button type="button" onclick="openProfileModal()" style="width:100%;text-align:left;padding:11px 14px;border:none;background:none;font-size:13px;cursor:pointer;display:flex;gap:8px;align-items:center;">✏️ Edit Profile</button>
+              <button type="button" onclick="logout()" style="width:100%;text-align:left;padding:11px 14px;border:none;background:none;font-size:13px;cursor:pointer;display:flex;gap:8px;align-items:center;color:var(--red);border-top:1px solid var(--border);">🚪 Logout</button>
+            </div>
+          </div>
+<select class="lang-select" id="lang-select" onchange="changeLang(this.value)">
             <option value="en">🇮🇳 English</option>
             <option value="hi">हिन्दी</option>
             <option value="pa">ਪੰਜਾਬੀ</option>
@@ -621,9 +628,9 @@
               <div class="stat-sub">Rain expected tomorrow</div>
             </div>
             <div class="stat-card" data-icon="📈">
-              <div class="stat-label">Wheat MSP</div>
-              <div class="stat-value">₹2,275</div>
-              <div class="stat-sub">/quintal — stable</div>
+              <div class="stat-label">🏛️ MSP Rate</div>
+              <div class="stat-value" id="msp-dash-rate">—</div>
+              <div class="stat-sub" id="msp-dash-info">Govt MSP 2025-26</div>
             </div>
             <div class="stat-card" data-icon="🏛">
               <div class="stat-label">Eligible Schemes</div>
@@ -701,7 +708,7 @@
             <div class="upload-icon" id="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
             <h3>Click to Upload Crop Photo</h3>
             <p>Supports JPG, PNG · Max 10MB · Wheat, Rice, Cotton, Tomato, Maize, Makhana</p>
-            <input type="file" id="file-input" accept="image/*" capture="environment" onchange="handleImageUpload(event)">
+            <input type="file" id="file-input" accept="image/*" onchange="handleImageUpload(event)">
           </div>
           <img id="preview-img" class="preview-img" style="display:none;">
           <div id="disease-loading" class="loading" style="display:none;">
@@ -1013,7 +1020,23 @@
 
         <!-- MANDI PRICES -->
         <div class="page" id="page-mandi">
-          <div class="section-title">📊 Mandi Price Intelligence</div>
+                          <!-- MSP CAROUSEL -->
+        <div class="card" id="msp-carousel" style="margin-bottom:16px;">
+          <div class="card-title"><span class="dot"></span> 🏛️ Government MSP — 2025-26</div>
+          <div id="msp-slide" style="text-align:center;padding:14px 8px;min-height:110px;transition:opacity .5s ease,transform .5s ease;">
+            <div id="msp-crop-name" style="font-size:20px;font-weight:800;color:var(--primary-dark);"></div>
+            <div id="msp-crop-hi" style="font-size:13px;color:var(--text-muted);margin-top:2px;"></div>
+            <div id="msp-rate" style="font-size:30px;font-weight:900;color:#1B5E20;margin-top:8px;"></div>
+            <div id="msp-season" style="font-size:11px;color:var(--text-muted);margin-top:4px;"></div>
+          </div>
+          <div style="display:flex;justify-content:center;gap:14px;align-items:center;margin-top:6px;">
+            <button type="button" onclick="mspNav(-1)" style="border:1.5px solid var(--border);background:#fff;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:14px;">‹</button>
+            <span id="msp-counter" style="font-size:11px;color:var(--text-muted);"></span>
+            <button type="button" onclick="mspNav(1)" style="border:1.5px solid var(--border);background:#fff;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:14px;">›</button>
+          </div>
+          <p style="font-size:10px;color:var(--text-muted);text-align:center;margin-top:8px;">Official MSP by Govt of India (CACP) · ₹/quintal · Season 2025-26</p>
+        </div>
+<div class="section-title">📊 Mandi Price Intelligence</div>
           <p class="section-sub">Real-time crop prices from 450+ mandis · Updated every hour</p>
           <div class="tabs">
             <button class="tab active" onclick="filterMandi('all',this)">All Crops</button>
@@ -1316,7 +1339,101 @@
         </div>
 
         <!-- SOS -->
-        <div class="page" id="page-sos">
+                        <!-- PROFILE MODAL -->
+        <div id="profile-modal" onclick="if(event.target===this)closeProfileModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;padding:16px;overflow-y:auto;">
+          <div style="background:#fff;border-radius:14px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;position:relative;">
+            <button type="button" onclick="closeProfileModal()" style="position:absolute;top:12px;right:14px;border:none;background:var(--primary-pale);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px;">✕</button>
+            <div class="section-title" style="margin-bottom:4px;" data-i18n="pf_title">👤 Edit Profile</div>
+            <p class="section-sub" style="margin-bottom:12px;" data-i18n="pf_sub">अपनी जानकारी अपडेट करें — सभी फ़ील्ड वैकल्पिक हैं</p>
+<div class="card" style="max-width:640px;">
+            <div class="form-row">
+              <div class="input-group">
+                <label for="pf-name">पूरा नाम</label>
+                <input type="text" id="pf-name" placeholder="Full Name">
+              </div>
+              <div class="input-group">
+                <label for="pf-email" data-i18n="pf_email">Email (read-only)</label>
+                <input type="email" id="pf-email" readonly style="background:var(--bg);color:var(--text-muted);">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="input-group">
+                <label for="pf-phone" data-i18n="pf_phone">मोबाइल नंबर</label>
+                <input type="tel" id="pf-phone" maxlength="10" placeholder="10 अंकों का मोबाइल नंबर">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="input-group">
+                <label for="pf-state" data-i18n="pf_state">राज्य / UT</label>
+                <input type="text" id="pf-state" class="geo-input" placeholder="Select state / UT" autocomplete="off">
+                <input type="hidden" id="pf-state-code">
+                <div class="geo-dropdown hidden" id="pf-state-dd"></div>
+              </div>
+              <div class="input-group">
+                <label for="pf-district" data-i18n="pf_district">जिला</label>
+                <input type="text" id="pf-district" class="geo-input" placeholder="Select district" autocomplete="off" disabled>
+                <input type="hidden" id="pf-district-code">
+                <div class="geo-dropdown hidden" id="pf-district-dd"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="input-group">
+                <label for="pf-subdistrict" data-i18n="pf_subdistrict">उप-जिला / तहसील / तालुका</label>
+                <input type="text" id="pf-subdistrict" class="geo-input" placeholder="Select sub-district" autocomplete="off" disabled>
+                <input type="hidden" id="pf-subdistrict-code">
+                <div class="geo-dropdown hidden" id="pf-subdistrict-dd"></div>
+              </div>
+              <div class="input-group">
+                <label for="pf-village" data-i18n="pf_village">गाँव</label>
+                <input type="text" id="pf-village" class="geo-input" placeholder="Village name" autocomplete="off" disabled>
+                <input type="hidden" id="pf-village-code">
+                <div class="geo-dropdown hidden" id="pf-village-dd"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="input-group">
+                <label for="pf-land" data-i18n="pf_land">भूमि (Kattha)</label>
+                <input type="number" id="pf-land" min="0" step="0.01" placeholder="जैसे 10">
+              </div>
+              <div class="input-group">
+                <label for="pf-crop" data-i18n="pf_crop">मुख्य फसल</label>
+                <select id="pf-crop">
+                  <option value="">फसल चुनें</option>
+                  <option value="Dhan">Dhan (धान)</option>
+                  <option value="Gehun">Gehun (गेहूं)</option>
+                  <option value="Makka">Makka (मक्का)</option>
+                  <option value="Sarson">Sarson (सरसों)</option>
+                  <option value="Makhana">Makhana (मखाना)</option>
+                  <option value="Aloo">Aloo (आलू)</option>
+                  <option value="Tamatar">Tamatar (टमाटर)</option>
+                  <option value="Kapas">Kapas (कपास)</option>
+                  <option value="Ganna">Ganna (गन्ना)</option>
+                  <option value="Chana">Chana (चना)</option>
+                  <option value="Arhar">Arhar (अरहर)</option>
+                  <option value="Moong">Moong (मूंग)</option>
+                  <option value="Moongfali">Moongfali (मूंगफली)</option>
+                  <option value="Soyabean">Soyabean (सोयाबीन)</option>
+                  <option value="Jowar">Jowar (ज्वार)</option>
+                  <option value="Bajra">Bajra (बाजरा)</option>
+                  <option value="Jau">Jau (जौ)</option>
+                  <option value="Kela">Kela (केला)</option>
+                  <option value="Santra">Santra (संतरा)</option>
+                  <option value="Papita">Papita (पपीता)</option>
+                  <option value="Baingan">Baingan (बैंगन)</option>
+                  <option value="Bhindi">Bhindi (भिंडी)</option>
+                  <option value="Kheera">Kheera (खीरा)</option>
+                  <option value="Sabzi">Sabzi (सब्जी)</option>
+                  <option value="Anya">Anya (अन्य)</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary" id="pf-save" onclick="saveProfile()" style="width:100%;margin-top:8px;"="pf_save"><span data-i18n="pf_save">💾 Save Profile</span></button>
+          </div>
+        </div>
+
+          </div>
+        </div>
+<div class="page" id="page-sos">
           <div class="section-title">🚨 SOS Emergency System</div>
           <p class="section-sub">Instant emergency assistance for farmers — 24×7 response</p>
           <div class="sos-hero">

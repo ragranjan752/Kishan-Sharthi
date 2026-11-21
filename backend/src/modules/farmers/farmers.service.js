@@ -304,6 +304,24 @@ async function getProfile(farmerId) {
 //  UPDATE PROFILE
 // ════════════════════════════════════
 async function updateProfile(farmerId, updateData) {
+  // Resolve pan-India geography codes → canonical names
+  const hasGeo = updateData.state_code || updateData.district_code || updateData.subdistrict_code || updateData.village_code;
+  if (hasGeo && isConfigured) {
+    const geo = await locationsService.resolveGeo({
+      state_code: updateData.state_code,
+      district_code: updateData.district_code,
+      subdistrict_code: updateData.subdistrict_code,
+      village_code: updateData.village_code,
+    });
+    if (updateData.state_code && !geo.state) throw new AppError('Invalid state selection', 400, 'INVALID_GEO');
+    if (updateData.district_code && !geo.district) throw new AppError('Invalid district selection', 400, 'INVALID_GEO');
+    if (updateData.subdistrict_code && !geo.block) throw new AppError('Invalid sub-district selection', 400, 'INVALID_GEO');
+    updateData.state = geo.state || updateData.state || null;
+    updateData.district = geo.district || updateData.district;
+    updateData.block = geo.block || updateData.subdistrict || updateData.block;
+    updateData.subdistrict = geo.block || updateData.subdistrict || updateData.block;
+    updateData.village = geo.village || updateData.village || null;
+  }
   const updated = await farmerRepo.update(farmerId, updateData);
   invalidateUserCache(farmerId);
   logger.info({ farmerId }, 'Farmer profile updated');

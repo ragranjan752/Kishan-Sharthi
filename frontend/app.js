@@ -390,6 +390,7 @@ function makeGeoPicker({ inputId, ddId, codeId, getOptions, serverSearch, onPick
   return {
     enable() { input.disabled = false; input.placeholder = defaultPlaceholder; },
     reset() { input.value = ''; codeEl.value = ''; options = null; input.disabled = true; if (disabledPlaceholder) input.placeholder = disabledPlaceholder; },
+    preset(name, code) { input.value = name || ''; codeEl.value = code || ''; input.disabled = false; },
     value() { return { name: input.value.trim(), code: parseInt(codeEl.value, 10) || null }; },
   };
 }
@@ -580,25 +581,24 @@ function loginSuccess(user, token, rememberMe = true) {
   }
   sessionStorage.setItem('ks_user', JSON.stringify(user));
   const cpScreen = document.getElementById('complete-profile-screen');
-  const skipped = sessionStorage.getItem('ks_skip_cp') === '1';
-  if (!isProfileComplete(user) && !skipped) {
-    document.getElementById('landing-page').style.display = 'none';
-    document.getElementById('auth-screen').classList.remove('show');
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('forgot-password-screen').style.display = 'none';
-    document.getElementById('app').classList.remove('visible');
-    if (cpScreen) cpScreen.style.display = 'flex';
-    initCompleteProfileForm();
-    return;
-  }
   if (cpScreen) cpScreen.style.display = 'none';
   document.getElementById('landing-page').style.display = 'none';
   document.getElementById('auth-screen').classList.remove('show');
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').classList.add('visible');
-  document.getElementById('sidebar-name').textContent = user.name || 'Farmer';
-  document.getElementById('sidebar-loc').textContent = `📍 ${user.district || user.state || 'Bihar'}`;
-  document.getElementById('sidebar-avatar').textContent = (user.name || 'K').charAt(0).toUpperCase();
+  const sn = document.getElementById('sidebar-name');
+  const sl = document.getElementById('sidebar-loc');
+  if (sn) sn.textContent = user.name || 'Farmer';
+  if (sl) sl.textContent = `📍 ${user.district || user.state || 'Bihar'}`;
+  const photoUrl = user.profile_image_url || user.photoURL || user.photo_url || null;
+  const setAvatar = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (photoUrl) el.innerHTML = `<img src="${photoUrl}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    else el.textContent = (user.name || 'K').charAt(0).toUpperCase();
+  };
+  setAvatar('sidebar-avatar');
+  setAvatar('topbar-avatar');
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   document.getElementById('page-sub').textContent = `${greeting}, ${(user.name || 'Farmer').split(' ')[0]} 🌤`;
@@ -931,6 +931,173 @@ async function confirmPasswordReset() {
 }
 
 // ── Navigation ──
+
+// ── My Profile / Edit Profile ──
+let pfPickers = null;
+function initProfileGeo() {
+  if (pfPickers) return pfPickers;
+  let stCode = null, dtCode = null, sdCode = null;
+
+  const villagePicker = makeGeoPicker({
+    inputId: 'pf-village', ddId: 'pf-village-dd', codeId: 'pf-village-code',
+    loadingText: 'Loading villages…', emptyText: 'No villages found', disabledPlaceholder: 'Select sub-district first',
+    serverSearch: true,
+    getOptions: async (q) => {
+      if (!sdCode) return [];
+      const qq = q ? '&q=' + encodeURIComponent(q) : '';
+      const list = await geoApi('/api/locations/villages?subdistrictCode=' + sdCode + '&limit=50' + qq);
+      return list.map(v => ({ code: v.village_code, name: v.name }));
+    },
+  });
+  const subdistrictPicker = makeGeoPicker({
+    inputId: 'pf-subdistrict', ddId: 'pf-subdistrict-dd', codeId: 'pf-subdistrict-code',
+    loadingText: 'Loading sub-districts…', emptyText: 'No sub-districts found', disabledPlaceholder: 'Select district first',
+    getOptions: async () => {
+      if (!dtCode) return [];
+      const list = await geoApi('/api/locations/subdistricts?districtCode=' + dtCode);
+      return list.map(b => ({ code: b.subdistrict_code, name: b.name }));
+    },
+    onPick: (item) => { sdCode = item.code; villagePicker.enable(); villagePicker.reset(); villagePicker.enable(); },
+  });
+  const districtPicker = makeGeoPicker({
+    inputId: 'pf-district', ddId: 'pf-district-dd', codeId: 'pf-district-code',
+    loadingText: 'Loading districts…', emptyText: 'No districts found', disabledPlaceholder: 'Select state first',
+    getOptions: async () => {
+      if (!stCode) return [];
+      const list = await geoApi('/api/locations/districts?stateCode=' + stCode);
+      return list.map(d => ({ code: d.district_code, name: d.name }));
+    },
+    onPick: (item) => { dtCode = item.code; sdCode = null; subdistrictPicker.reset(); subdistrictPicker.enable(); villagePicker.reset(); },
+  });
+  const statePicker = makeGeoPicker({
+    inputId: 'pf-state', ddId: 'pf-state-dd', codeId: 'pf-state-code',
+    loadingText: 'Loading states…', emptyText: 'No states found',
+    getOptions: async () => {
+      const list = await geoApi('/api/locations/states');
+      return list.map(x => ({ code: x.state_code, name: x.name }));
+    },
+    onPick: (item) => {
+      stCode = item.code; dtCode = null; sdCode = null;
+      districtPicker.reset(); districtPicker.enable();
+      subdistrictPicker.reset(); villagePicker.reset();
+    },
+  });
+  pfPickers = { statePicker, districtPicker, subdistrictPicker, villagePicker };
+  return pfPickers;
+}
+
+function toggleProfileMenu(e){
+  if(e)e.stopPropagation();
+  const m=document.getElementById('profile-menu');if(!m)return;
+  m.style.display=m.style.display==='none'?'block':'none';
+  const u=currentUser||{};
+  const nm=document.getElementById('pm-name');const em=document.getElementById('pm-email');const av=document.getElementById('pm-avatar');
+  if(nm)nm.textContent=u.name||'Farmer';if(em)em.textContent=u.email||'—';
+  const photo=u.profile_image_url||u.photoURL||u.photo_url;
+  if(av){if(photo){av.innerHTML='<img src="'+photo+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">'}else{av.textContent=(u.name||'K').charAt(0).toUpperCase()}}
+}
+function openProfileModal(){
+  const m=document.getElementById('profile-menu');if(m)m.style.display='none';
+  const mo=document.getElementById('profile-modal');if(mo)mo.style.display='flex';
+  initProfileForm();
+}
+function closeProfileModal(){
+  const mo=document.getElementById('profile-modal');if(mo)mo.style.display='none';
+}
+document.addEventListener('click',function(e){
+  const m=document.getElementById('profile-menu');
+  if(m&&m.style.display!=='none'&&!e.target.closest('#profile-menu')&&!e.target.closest('#topbar-avatar'))m.style.display='none';
+});
+async function initProfileForm() {
+  const u = currentUser || {};
+  const set = (id, v) => { const el = document.getElementById(id); if (el && v != null && v !== 'Not specified') el.value = v; };
+  set('pf-name', u.name);
+  set('pf-email', u.email);
+  set('pf-phone', u.phone);
+  set('pf-land', u.land_size_kattha);
+  set('pf-crop', u.primary_crop);
+  try {
+    const token = getAuthToken();
+    if (token) {
+      const res = await fetch('/api/farmers/me', { headers: { Authorization: 'Bearer ' + token } });
+      const j = await readApiJson(res);
+      const farmer = (j && (j.data && (j.data.farmer || j.data) || j.farmer)) || {};
+      ['name','email','phone','state','district','block','subdistrict','village','land_size_kattha','primary_crop'].forEach(k => {
+        if (farmer[k] != null) u[k] = farmer[k];
+      });
+      ['state_code','district_code','subdistrict_code','village_code'].forEach(k => { if (farmer[k] != null) u[k] = farmer[k]; });
+    }
+  } catch (e) { console.log('profile fetch:', e.message); }
+  set('pf-name', u.name); set('pf-email', u.email); set('pf-phone', u.phone); set('pf-land', u.land_size_kattha); set('pf-crop', u.primary_crop);
+
+  const pickers = initProfileGeo();
+  const fillName = (id, codeId, name) => {
+    const el = document.getElementById(id), c = document.getElementById(codeId);
+    if (el && name && name !== 'Not specified') el.value = name;
+    if (c && u[codeId.replace('-code','')] !== undefined) {}
+  };
+  // Prefill names + codes from saved profile
+  const map = [['pf-state','pf-state-code','state','state_code'],['pf-district','pf-district-code','district','district_code'],['pf-subdistrict','pf-subdistrict-code','subdistrict','subdistrict_code'],['pf-village','pf-village-code','village','village_code']];
+  map.forEach(([iid,cid,nk,ck]) => {
+    const el = document.getElementById(iid), c = document.getElementById(cid);
+    const nm = u[nk] || (nk === 'subdistrict' ? u.block : null);
+    if (el && nm && nm !== 'Not specified') { el.value = nm; el.disabled = false; }
+    if (c && u[ck]) c.value = u[ck];
+    const pk = { 'pf-state':'statePicker','pf-district':'districtPicker','pf-subdistrict':'subdistrictPicker','pf-village':'villagePicker' }[iid];
+    const picker = pfPickers && pfPickers[pk];
+    if (picker && picker.preset && nm && nm !== 'Not specified') picker.preset(nm, u[ck] || null);
+  });
+  // Rebuild picker internal codes from hidden fields so cascade works
+  // (pickers keep their own code vars; prefill names only — user can re-pick to set codes)
+}
+
+async function saveProfile() {
+  const btn = document.getElementById('pf-save');
+  const name = document.getElementById('pf-name').value.trim();
+  const phone = document.getElementById('pf-phone').value.trim();
+  const state = document.getElementById('pf-state').value.trim();
+  const district = document.getElementById('pf-district').value.trim();
+  const subdistrict = document.getElementById('pf-subdistrict').value.trim();
+  const village = document.getElementById('pf-village').value.trim();
+  const land = document.getElementById('pf-land').value;
+  const crop = document.getElementById('pf-crop').value;
+  const num = (id) => { const v = parseInt(document.getElementById(id).value, 10); return Number.isFinite(v) ? v : null; };
+
+  if (phone && !/^[6-9]\d{9}$/.test(phone)) { showToast('⚠️ मान्य 10-अंकीय मोबाइल नंबर दर्ज करें', 'error'); return; }
+  btn.disabled = true; btn.textContent = '⏳ Saving…';
+  try {
+    const token = getAuthToken();
+    const res = await fetch('/api/farmers/' + (currentUser.id || currentUser.uid), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        name: name || undefined,
+        phone: phone || undefined,
+        state: state || undefined,
+        state_code: num('pf-state-code'),
+        district: district || undefined,
+        district_code: num('pf-district-code'),
+        subdistrict: subdistrict || undefined,
+        subdistrict_code: num('pf-subdistrict-code'),
+        village: village || undefined,
+        village_code: num('pf-village-code'),
+        land_size_kattha: land ? Number(land) : undefined,
+        primary_crop: crop || undefined
+      })
+    });
+    const data = await readApiJson(res);
+    if (!res.ok) throw new Error(data.error || 'Save failed');
+    const farmer = (data.data && (data.data.farmer || data.data)) || {};
+    currentUser = { ...currentUser, ...farmer };
+    sessionStorage.setItem('ks_user', JSON.stringify(currentUser));
+    showToast('✅ Profile saved!', 'success');
+  } catch (e) {
+    showToast('❌ ' + (e.message || 'Save failed'), 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Save Profile';
+  }
+}
+
 function showPage(pageId, elem) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -972,9 +1139,10 @@ function showPage(pageId, elem) {
 
   // REFRESH MODULE CONTENT WHEN OPENED — Never leave blank
   if (pageId === 'dashboard') loadDashboard();
+  
   if (pageId === 'weather') loadIrrigationAdvice();
   if (pageId === 'market') { loadProducts(); prefillFertilizerCalculator(); }
-  if (pageId === 'mandi') loadMandi('all');
+  if (pageId === 'mandi') { loadMandi('all'); renderMspTicker(); renderMspTable(); }
   if (pageId === 'schemes') loadSchemes();
   if (pageId === 'trace') prefillFarmTraceForm();
   if (pageId === 'community') loadCommunity();
@@ -992,6 +1160,62 @@ function triggerCamera() {
 
 function triggerGallery() {
   document.getElementById('file-input')?.click();
+}
+
+async function loadAdvisory() {
+  const box = document.getElementById('ai-advisory-content');
+  const ttl = document.getElementById('ai-advisory-title');
+  if (!box) return;
+  box.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">⏳ Loading real advisory for your area…</div>';
+  try {
+    const token = getAuthToken();
+    const res = await fetch('/api/advisory', { headers: token ? { Authorization: 'Bearer ' + token } : {} });
+    if (!res.ok) throw new Error('advisory failed');
+    const j = await readApiJson(res);
+    const d = (j && j.data) ? j.data : j;
+    if (!d || !d.location) throw new Error('no data');
+
+    if (ttl) ttl.textContent = 'AI Advisory — ' + (d.location.label || 'your area') + (d.crop ? ' · ' + d.crop : '');
+
+    let html = '';
+    // Weather-based advice
+    (d.weatherAdvice || []).forEach(a => {
+      const icon = a.level === 'warn' ? '⚠️' : a.level === 'ok' ? '✅' : '🌦️';
+      html += '<div style="margin:6px 0;">' + icon + ' <strong>' + a.type + ':</strong> ' + a.text + '</div>';
+    });
+
+    // Weather snapshot line
+    if (d.weather && d.weather.available) {
+      const w = d.weather;
+      html += '<div style="margin:8px 0;padding:8px;background:var(--primary-pale);border-radius:8px;font-size:12px;">' +
+        '🌡️ ' + w.temp + '°C · ' + w.condition + ' · 💧 ' + w.humidity + '% · 🌧️ ' + (w.rainProbability != null ? w.rainProbability + '% rain chance' : '—') +
+        '<br><small>📍 ' + (w.location || '') + ' · Source: ' + (d.sources.weather || 'Open-Meteo') + ' · ' + new Date(d.generatedAt).toLocaleString() + '</small></div>';
+    } else {
+      html += '<div style="margin:6px 0;color:var(--text-muted);font-size:12px;">🌦️ Weather data unavailable for your location.</div>';
+    }
+
+    // Real agri news
+    if (d.news && d.news.length) {
+      html += '<div style="margin-top:10px;font-weight:700;font-size:12px;">📰 Latest Agricultural News (' + (d.location.state || 'India') + ')</div>';
+      d.news.slice(0, 5).forEach(n => {
+        const dt = n.pubDate ? new Date(n.pubDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
+        html += '<div style="margin:5px 0;font-size:12px;line-height:1.4;"><a href="' + n.link + '" target="_blank" style="color:var(--primary-dark);text-decoration:none;">' + n.title + '</a>' +
+          '<br><small style="color:var(--text-muted);">' + dt + ' · ' + (n.source || 'News') + '</small></div>';
+      });
+    } else {
+      html += '<div style="margin-top:8px;color:var(--text-muted);font-size:12px;">📰 No location-specific news found right now.</div>';
+    }
+
+    // Schemes count
+    if (d.schemes && d.schemes.count != null) {
+      html += '<div style="margin-top:8px;font-size:12px;">🏛️ ' + d.schemes.count + ' government schemes available — check Govt Schemes page.</div>';
+    }
+
+    html += '<div style="margin-top:10px;font-size:10px;color:var(--text-muted);">Sources: ' + Object.values(d.sources || {}).join(' · ') + '</div>';
+    box.innerHTML = html;
+  } catch (e) {
+    box.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Advisory data currently unavailable. Please try again later.</div>';
+  }
 }
 
 // ── Dashboard ──
@@ -1019,8 +1243,8 @@ async function loadDashboard() {
       const wx = (d && d.weather) || {};
 
       // Card 0: Crop health
-      const healthVal = (st.cropHealth !== undefined && st.cropHealth !== null) ? st.cropHealth + '%' : '87%';
-      const healthSub = st.cropHealthChange || (st.cropHealth != null ? 'Based on latest scans' : 'Field status good · Scan leaf to update');
+      const healthVal = (st.cropHealth !== undefined && st.cropHealth !== null) ? st.cropHealth + '%' : '—';
+      const healthSub = st.cropHealthChange || (st.cropHealth != null ? 'Based on latest scans' : 'No scans yet — scan a leaf to get score');
       setStat(cards[0], '.stat-value', healthVal, '.stat-sub', healthSub);
 
       // Card 1: Today's Irrigation
@@ -1028,14 +1252,11 @@ async function loadDashboard() {
       const irrigSub = st.irrigationReason || 'Rain forecast in 36 hrs · Save power';
       setStat(cards[1], '.stat-value', irrigVal, '.stat-sub', irrigSub);
 
-      // Card 2: Market price
-      const priceVal = st.marketPrice || '₹2,320';
-      const priceSub = st.marketTrend ? `${st.marketTrend} ${st.mandi ? '· ' + st.mandi : ''}` : 'Patna Mandi · Wheat MSP ₹2,275';
-      setStat(cards[2], '.stat-value', priceVal, '.stat-sub', priceSub);
+            // Card 2: MSP rotation handled by startMspDash()
 
       // Card 3: Eligible schemes
-      const schemesVal = (st.eligibleSchemes !== undefined && st.eligibleSchemes !== null) ? String(st.eligibleSchemes) : '4';
-      const schemesSub = st.schemesAmount || '₹35,000+ available for your farm';
+      const schemesVal = (st.eligibleSchemes !== undefined && st.eligibleSchemes !== null) ? String(st.eligibleSchemes) : '—';
+      const schemesSub = st.schemesAmount || 'Schemes unavailable';
       setStat(cards[3], '.stat-value', schemesVal, '.stat-sub', schemesSub);
 
       // Update weather snapshot
@@ -1046,10 +1267,11 @@ async function loadDashboard() {
       const wHum = document.getElementById('dash-weather-humidity');
 
       if (wTemp && wx.temp != null) wTemp.textContent = `${wx.temp}°C`;
-      if (wDesc) wDesc.textContent = `${wx.location || district}, Bihar · ${wx.condition || 'Partly Cloudy'}`;
+      if (wDesc) wDesc.textContent = `${wx.location || district || 'Your area'} · ${wx.condition || 'Weather unavailable'}`;
       if (wHum && wx.humidity != null) wHum.textContent = `💧 ${wx.humidity}%`;
-      if (wWind) wWind.textContent = '💨 18 km/h';
+      if (wWind) wWind.textContent = '💨 —';
 
+      loadAdvisory();
       // Weather icon mapping
       if (wIcon && wx.condition) {
         const c = wx.condition.toLowerCase();
@@ -1064,11 +1286,12 @@ async function loadDashboard() {
     console.log('Dashboard error:', err);
   }
 
-  // Graceful defaults for offline/first load
-  setStat(cards[0], '.stat-value', '87%', '.stat-sub', 'Regular monitoring active · Scan leaf for live score');
-  setStat(cards[1], '.stat-value', 'Skip', '.stat-sub', 'Rain forecast · Review weather before pump run');
-  setStat(cards[2], '.stat-value', '₹2,320', '.stat-sub', `${crop} MSP ₹2,275/qtl benchmark`);
-  setStat(cards[3], '.stat-value', '4', '.stat-sub', '₹35,000+ benefits matched to profile');
+  // Data unavailable — show honest placeholders, no fabricated numbers
+  setStat(cards[0], '.stat-value', '—', '.stat-sub', 'Data currently unavailable');
+  setStat(cards[1], '.stat-value', '—', '.stat-sub', 'Data currently unavailable');
+        // MSP card handled by rotation
+
+  setStat(cards[3], '.stat-value', '—', '.stat-sub', 'Data currently unavailable');
 }
 
 let stateMapInstance = null;
@@ -1087,22 +1310,19 @@ async function loadStateMap() {
   const el = document.getElementById('state-map-frame');
   if (!el) return;
   const u = currentUser || {};
-  const stateName = u.state && u.state !== 'Not specified' ? u.state : (u.district || 'India');
+  const stateName = u.state && u.state !== 'Not specified' ? u.state : null;
+  const districtName = u.district && u.district !== 'Not specified' ? u.district : null;
+  const subName = (u.subdistrict || u.block) && (u.subdistrict || u.block) !== 'Not specified' ? (u.subdistrict || u.block) : null;
+  const villageName = u.village && u.village !== 'Not specified' ? u.village : null;
 
-  // Farmer chips
-  const st = document.getElementById('sm-state');
-  const ds = document.getElementById('sm-district');
-  const gd = document.getElementById('sm-grid');
-  if (st) st.textContent = stateName;
-  if (ds) ds.textContent = [u.district, u.block].filter(v => v && v !== 'Not specified').join(' · ') || 'Location set in profile';
-  if (gd) {
-    const items = [['👨‍🌾', u.name || 'Farmer'], ['🌾', u.primary_crop || 'Crop not set'], ['📏', u.land_size_kattha ? u.land_size_kattha + ' Kattha' : 'Land not set'], ['📱', u.phone || '—']];
-    gd.innerHTML = items.map(i => '<div style="background:rgba(255,255,255,.15);border-radius:8px;padding:8px;"><div style="font-size:14px;">' + i[0] + '</div><div style="font-size:11px;opacity:.9;">' + i[1] + '</div></div>').join('');
+  el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px;gap:8px;"><span style="font-size:22px;">🗺️</span> Loading your location…</div>';
+  if (!stateName && !districtName) {
+    stateMapFallback(el, 'Complete your location details in your profile to see your local map.');
+    return;
   }
 
   if (!window.L) { stateMapFallback(el, 'Map library unavailable'); return; }
   if (stateMapInstance) { try { stateMapInstance.remove(); } catch (_) {} stateMapInstance = null; stateMapLayer = null; }
-
   el.innerHTML = '';
   const map = L.map(el, { scrollWheelZoom: false, zoomControl: true }).setView([22.5, 79.0], 5);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1110,50 +1330,54 @@ async function loadStateMap() {
   }).addTo(map);
   stateMapInstance = map;
 
-  // Default India marker
-  const marker = L.marker([22.5, 79.0]).addTo(map);
-
+  // Resolve saved profile location → coordinates via backend geocode
+  let lat = null, lng = null;
   try {
-    const res = await fetch(INDIA_STATES_GEOJSON);
-    const gj = await res.json();
-    const india = gj.features.filter(f => f.properties && f.properties.name);
-    if (!india.length) throw new Error('no india features');
+    const geoRes = await fetch('/api/locations/geocode?village=' + encodeURIComponent(villageName || '') + '&subdistrict=' + encodeURIComponent(subName || '') + '&district=' + encodeURIComponent(districtName || '') + '&state=' + encodeURIComponent(stateName || ''));
+    const gj = await geoRes.json();
+    const g = gj && gj.data ? gj.data : null;
+    if (g && g.lat != null) { lat = g.lat; lng = g.lng; }
+  } catch (e) { console.warn('geocode failed:', e.message); }
 
-    const target = normStateName(stateName);
-    let matched = null;
-    for (const f of india) {
-      const n = normStateName((f.properties.name || f.properties['name:en'] || f.properties.name_en || f.properties.postal || ''));
-      if (n === target || (target.length > 4 && (n.includes(target) || target.includes(n)))) { matched = f; break; }
-    }
-
-    const layer = L.geoJSON(matched || { type: 'FeatureCollection', features: india }, {
-      style: f2 => matched && f2 === matched
-        ? { color: '#FFB300', weight: 2.5, fillColor: '#FFB300', fillOpacity: 0.35 }
-        : { color: '#1B5E20', weight: 0.8, fillColor: '#A5D6A7', fillOpacity: 0.12 }
-    }).addTo(map);
-    stateMapLayer = layer;
-
-    if (matched) {
-      const bounds = layer.getBounds();
-      map.fitBounds(bounds.pad(0.15));
-      const c = bounds.getCenter();
-      marker.setLatLng(c);
-      marker.bindTooltip('📍 ' + stateName, { permanent: true, direction: 'top', className: 'state-pin' }).openTooltip();
-    }
-  } catch (e) {
-    console.warn('State geojson load failed:', e.message);
-    stateMapFallback(el, '🗺️ ' + stateName + ' — map data unavailable');
-    return;
+  // Fallback: state-level polygon if village geocode failed
+  if (lat == null) {
+    try {
+      const res = await fetch(INDIA_STATES_GEOJSON);
+      const gj2 = await res.json();
+      const india = (gj2.features || []).filter(f => f.properties && f.properties.name);
+      const target = normStateName(stateName || districtName || 'India');
+      let matched = null;
+      for (const f of india) {
+        const n = normStateName((f.properties.name || f.properties['name:en'] || f.properties.name_en || f.properties.postal || ''));
+        if (n === target || (target.length > 4 && (n.includes(target) || target.includes(n)))) { matched = f; break; }
+      }
+      const feats = matched ? [matched] : india;
+      const layer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
+        style: () => ({ color: '#FFB300', weight: 1.2, fillColor: '#FFB300', fillOpacity: matched ? 0.25 : 0.08 })
+      }).addTo(map);
+      stateMapLayer = layer;
+      map.fitBounds(layer.getBounds().pad(0.1));
+      if (!matched) { stateMapFallback(el, 'Could not find your location on the map. Check your profile village/district.'); return; }
+      // state-level view: show saved location popup at state center
+      const c = layer.getBounds().getCenter();
+      const label = [villageName, subName, districtName, stateName].filter(Boolean).join(' · ');
+      if (label) L.marker(c).addTo(map).bindPopup('<b>📍 ' + label + '</b><br><small>Village-level map unavailable</small>').openPopup();
+    } catch (e) { console.warn('state geojson failed:', e.message); stateMapFallback(el, 'Location map unavailable — ' + (stateName || districtName || '')); return; }
+  } else {
+    map.setView([lat, lng], villageName ? 14 : 11);
+    const label = [villageName, subName, districtName, stateName].filter(Boolean).join(', ');
+    L.marker([lat, lng]).addTo(map)
+      .bindPopup('<b>📍 ' + (villageName || districtName || stateName) + '</b><br>' + [subName, districtName, stateName].filter(Boolean).join(' · ') + '<br><a href="https://www.openstreetmap.org/?mlat=' + lat + '&mlon=' + lng + '#map=14/' + lat + '/' + lng + '" target="_blank">Open in OpenStreetMap</a>')
+      .openPopup();
   }
 
   map.invalidateSize();
-
-  // Click → open larger OSM view
-  map.on('click', () => {
-    const c = map.getCenter();
-    window.open('https://www.openstreetmap.org/?mlat=' + c.lat + '&mlon=' + c.lng + '#map=8/' + c.lat + '/' + c.lng, '_blank');
-  });
+  setTimeout(() => { try { map.invalidateSize(); } catch (_) {} }, 150);
+  setTimeout(() => { try { map.invalidateSize(); } catch (_) {} }, 600);
+  window.addEventListener('resize', () => { try { map.invalidateSize(); } catch (_) {} });
 }
+
+function stateMapFallbackMsg() {}
 
 function stateMapFallback(el, msg) {
   el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px;gap:6px;"><span style="font-size:28px;">🗺️</span>' + msg + '</div>';
@@ -1812,22 +2036,96 @@ async function placeOrder(id, name, price) {
 }
 
 // ── Mandi Prices ──
-const BIHAR_MANDI_BACKUP = [
-  { crop: '🌾 Dhan (Paddy)', category: 'grains', mandi: 'Bhojpur (Ara), Bihar', price: 2183, msp: 2183, change_val: 0, pct: '0.0%', trend: '→' },
-  { crop: '🌾 Dhan (Paddy)', category: 'grains', mandi: 'Buxar, Bihar', price: 2195, msp: 2183, change_val: 12, pct: '+0.55%', trend: '↑' },
-  { crop: '🌸 Makhana (Raw)', category: 'commercial', mandi: 'Darbhanga, Bihar', price: 14500, msp: null, change_val: 350, pct: '+2.47%', trend: '↑' },
-  { crop: '🌸 Makhana (Raw)', category: 'commercial', mandi: 'Madhubani, Bihar', price: 14200, msp: null, change_val: 200, pct: '+1.43%', trend: '↑' },
-  { crop: '🌽 Makka (Rabi Maize)', category: 'grains', mandi: 'Khagaria, Bihar', price: 2280, msp: 2090, change_val: 45, pct: '+2.01%', trend: '↑' },
-  { crop: '🌽 Makka (Rabi Maize)', category: 'grains', mandi: 'Gulabbagh (Purnia), Bihar', price: 2310, msp: 2090, change_val: 60, pct: '+2.67%', trend: '↑' },
-  { crop: '🌾 Gehun (Wheat)', category: 'grains', mandi: 'Patna, Bihar', price: 2320, msp: 2275, change_val: 45, pct: '+1.98%', trend: '↑' },
-  { crop: '🌾 Gehun (Wheat)', category: 'grains', mandi: 'Muzaffarpur, Bihar', price: 2290, msp: 2275, change_val: 15, pct: '+0.66%', trend: '↑' },
-  { crop: '🫘 Chana (Gram)', category: 'pulses', mandi: 'Mokama (Patna), Bihar', price: 5850, msp: 5440, change_val: 50, pct: '+0.86%', trend: '↑' },
-  { crop: '🫘 Masoor (Lentil)', category: 'pulses', mandi: 'Barh (Patna), Bihar', price: 6200, msp: 6000, change_val: 75, pct: '+1.22%', trend: '↑' },
-  { crop: '🌿 Sarson (Mustard)', category: 'oilseeds', mandi: 'Samastipur, Bihar', price: 5450, msp: 5650, change_val: -30, pct: '-0.55%', trend: '↓' },
-  { crop: '🥔 Potato', category: 'vegetables', mandi: 'Bihar Sharif (Nalanda), Bihar', price: 1120, msp: null, change_val: -15, pct: '-1.32%', trend: '↓' },
-  { crop: '🧅 Onion', category: 'vegetables', mandi: 'Fatuha (Patna), Bihar', price: 1850, msp: null, change_val: 40, pct: '+2.21%', trend: '↑' }
-];
 
+// ── Official MSP 2025-26 (CACP / Govt of India, PIB Aug 2025) ──
+// prev = 2024-25 MSP; msp = 2025-26 MSP; ₹/quintal
+const MSP_DATA = [
+  // Kharif
+  { name:'Paddy (Common)', hi:'धान (सामान्य)', cat:'kharif', msp:2369, prev:2300 },
+  { name:'Paddy (Grade A)', hi:'धान (ग्रेड A)', cat:'kharif', msp:2389, prev:2320 },
+  { name:'Jowar (Hybrid)', hi:'ज्वार (हाइब्रिड)', cat:'kharif', msp:3699, prev:3371 },
+  { name:'Jowar (Maldandi)', hi:'ज्वार (मालदांडी)', cat:'kharif', msp:3749, prev:3421 },
+  { name:'Bajra', hi:'बाजरा', cat:'kharif', msp:2775, prev:2625 },
+  { name:'Ragi', hi:'रागी', cat:'kharif', msp:4886, prev:4290 },
+  { name:'Maize', hi:'मक्का', cat:'kharif', msp:2400, prev:2225 },
+  { name:'Arhar (Tur)', hi:'अरहर/तूर', cat:'kharif', msp:8000, prev:7550 },
+  { name:'Moong', hi:'मूंग', cat:'kharif', msp:8768, prev:8682 },
+  { name:'Urad', hi:'उड़द', cat:'kharif', msp:7800, prev:7400 },
+  { name:'Cotton (Medium Staple)', hi:'कपास (मध्यम रेशा)', cat:'kharif', msp:7521, prev:7121 },
+  { name:'Cotton (Long Staple)', hi:'कपास (लंबा रेशा)', cat:'kharif', msp:8110, prev:7521 },
+  { name:'Groundnut', hi:'मूंगफली', cat:'kharif', msp:7263, prev:6783 },
+  { name:'Sunflower Seed', hi:'सूरजमुखी', cat:'kharif', msp:7721, prev:7280 },
+  { name:'Soyabean (Yellow)', hi:'सोयाबीन', cat:'kharif', msp:5328, prev:4892 },
+  { name:'Sesamum', hi:'तिल', cat:'kharif', msp:10346, prev:9267 },
+  { name:'Nigerseed', hi:'राई/रामतिल', cat:'kharif', msp:10052, prev:8717 },
+  // Rabi
+  { name:'Wheat', hi:'गेहूं', cat:'rabi', msp:2425, prev:2275 },
+  { name:'Barley', hi:'जौ', cat:'rabi', msp:1980, prev:1850 },
+  { name:'Gram (Chana)', hi:'चना', cat:'rabi', msp:5650, prev:5440 },
+  { name:'Masur (Lentil)', hi:'मसूर', cat:'rabi', msp:6700, prev:6425 },
+  { name:'Rapeseed & Mustard', hi:'सरसों/राई', cat:'rabi', msp:5950, prev:5650 },
+  { name:'Safflower', hi:'कुसुम', cat:'rabi', msp:5940, prev:5800 },
+  // Commercial
+  { name:'Jute', hi:'जूट', cat:'commercial', msp:4700, prev:4500 },
+  { name:'Copra (Milling)', hi:'नारियल खोपरा (मिलिंग)', cat:'commercial', msp:11582, prev:11100 },
+  { name:'Copra (Ball)', hi:'नारियल खोपरा (बॉल)', cat:'commercial', msp:12100, prev:11600 }
+];
+const MSP_CAT_LABEL = { kharif:'Kharif', rabi:'Rabi', commercial:'Commercial' };
+
+let mspIdx = 0, mspTimer = null;
+
+// ── Dashboard MSP card rotation (real CACP 2025-26 data) ──
+let mspDashIdx = 0, mspDashTimer = null;
+function startMspDash() {
+  if (mspDashTimer || typeof MSP_DATA === 'undefined' || !MSP_DATA.length) return;
+  const rateEl = document.getElementById('msp-dash-rate');
+  const infoEl = document.getElementById('msp-dash-info');
+  if (!rateEl || !infoEl) return;
+  rateEl.style.transition='opacity .3s ease';infoEl.style.transition='opacity .3s ease';
+  const tick = () => {
+    const c = MSP_DATA[mspDashIdx % MSP_DATA.length];
+    mspDashIdx++;
+    rateEl.style.opacity = 0;
+    setTimeout(() => {
+      rateEl.textContent = '₹' + c.msp.toLocaleString('en-IN') + ' /qtl';
+      infoEl.textContent = c.name + ' · ' + (c.cat === 'kharif' ? 'Kharif' : c.cat === 'rabi' ? 'Rabi' : 'Commercial') + ' MSP 2025-26';
+      rateEl.style.opacity = 1;
+    }, 300);
+  };
+  tick();
+  mspDashTimer = setInterval(tick, 3500);
+}
+
+function renderMspSlide() {
+  const c = MSP_DATA[mspIdx];
+  if (!c) return;
+  const slide = document.getElementById('msp-slide');
+  const nm = document.getElementById('msp-crop-name');
+  const hi = document.getElementById('msp-crop-hi');
+  const rt = document.getElementById('msp-rate');
+  const sn = document.getElementById('msp-season');
+  const ct = document.getElementById('msp-counter');
+  if (slide) { slide.style.opacity = 0; slide.style.transform = 'translateY(8px)'; }
+  setTimeout(() => {
+    if (nm) nm.textContent = c.name;
+    if (hi) hi.textContent = c.hi || '';
+    if (rt) rt.textContent = '₹' + c.msp.toLocaleString('en-IN') + ' /quintal';
+    if (sn) sn.textContent = (c.cat === 'kharif' ? 'Kharif Marketing Season' : c.cat === 'rabi' ? 'Rabi Marketing Season' : 'Commercial Crops') + ' · 2025-26 · Prev ₹' + c.prev.toLocaleString('en-IN');
+    if (ct) ct.textContent = (mspIdx + 1) + ' / ' + MSP_DATA.length;
+    if (slide) { slide.style.opacity = 1; slide.style.transform = 'translateY(0)'; }
+  }, 250);
+}
+function mspStart() {
+  if (mspTimer) clearInterval(mspTimer);
+  mspTimer = setInterval(() => { mspIdx = (mspIdx + 1) % MSP_DATA.length; renderMspSlide(); }, 3500);
+}
+function mspNav(dir) {
+  mspIdx = (mspIdx + dir + MSP_DATA.length) % MSP_DATA.length;
+  renderMspSlide();
+  mspStart();
+}
+function renderMspTicker() { renderMspSlide(); mspStart(); }
+function renderMspTable() {}
 async function loadMandi(category) {
   try {
     const q = (category && category !== 'all') ? `?category=${encodeURIComponent(category)}` : '';
@@ -2105,16 +2403,26 @@ async function submitReport() {
 
 // ── Language ──
 const UI_I18N={
-en:{home:'Home',check:'Check',sarthi:'Sarthi AI',mandi:'Mandi Rates',schemes:'Schemes',menu:'Menu',dash:'Dashboard',disease:'Disease Detection',trace:'Farm-to-Fork QR',irrigation:'Irrigation Advice',market:'Fertilizer Market',mandi2:'Mandi Prices',schemes2:'Govt Schemes',community:'Community',tools:'Tool Sharing',offline:'SMS / IVR Access',sos:'SOS Emergency',logout:'Logout'},
-hi:{home:'होम',check:'जांचें',sarthi:'सारथी AI',mandi:'मंडी भाव',schemes:'योजनाएं',menu:'मेन्यू',dash:'डैशबोर्ड',disease:'रोग पहचान',trace:'फार्म-टू-फोर्क QR',irrigation:'सिंचाई सलाह',market:'उर्वरक बाजार',mandi2:'मंडी भाव',schemes2:'सरकारी योजनाएं',community:'समुदाय',tools:'औज़ार साझेदारी',offline:'SMS / IVR',sos:'SOS आपातकाल',logout:'लॉगआउट'},
-pa:{home:'ਹੋਮ',check:'ਜਾਂਚੋ',sarthi:'ਸਾਰਥੀ AI',mandi:'ਮੰਡੀ ਭਾਅ',schemes:'ਯੋਜਨਾਵਾਂ',menu:'ਮੀਨੂ',dash:'ਡੈਸ਼ਬੋਰਡ',disease:'ਬਿਮਾਰੀ ਪਛਾਣ',trace:'ਫਾਰਮ-ਟੂ-ਫਾਰਕ QR',irrigation:'ਸਿੰਚਾਈ ਸਲਾਹ',market:'ਖਾਦ ਬਾਜ਼ਾਰ',mandi2:'ਮੰਡੀ ਭਾਅ',schemes2:'ਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ',community:'ਭਾਈਚਾਰਾ',tools:'ਸੰਦ ਸਾਂਝ',offline:'SMS / IVR',sos:'SOS ਐਮਰਜੈਂਸੀ',logout:'ਲੌਗਆਉਟ'},
-te:{home:'హోమ్',check:'తనిఖీ',sarthi:'సారథి AI',mandi:'మండి ధరలు',schemes:'పథకాలు',menu:'మెనూ',dash:'డాష్‌బోర్డ్',disease:'వ్యాధి గుర్తింపు',trace:'ఫారమ్-టు-ఫార్క్ QR',irrigation:'ఇర్రిగేషన్ సలహా',market:'ఎరువుల మార్కెట్',mandi2:'మండి ధరలు',schemes2:'ప్రభుత్వ పథకాలు',community:'కమ్యూనిటీ',tools:'టూల్ షేరింగ్',offline:'SMS / IVR',sos:'SOS అత్యవసరం',logout:'లాగ్ అవుట్'},
-mr:{home:'होम',check:'तपासणी',sarthi:'सारथी AI',mandi:'मंडी भाव',schemes:'योजना',menu:'मेनू',dash:'डॅशबोर्ड',disease:'रोग ओळख',trace:'फार्म-टू-फार्क QR',irrigation:'सिंचन सल्ला',market:'खत बाजार',mandi2:'मंडी भाव',schemes2:'शासकीय योजना',community:'समुदाय',tools:'साधन शेअरिंग',offline:'SMS / IVR',sos:'SOS आपत्काल',logout:'लॉगआउट'},
-ta:{home:'முகப்பு',check:'சரிபார்',sarthi:'சாரதி AI',mandi:'சந்தை விலை',schemes:'திட்டங்கள்',menu:'மெனு',dash:'டாஷ்போர்டு',disease:'நோய் கண்டறிதல்',trace:'ஃபார்ம்-டு-ஃபார்க் QR',irrigation:'நீர்ப்பாசன ஆலோசனை',market:'உர சந்தை',mandi2:'சந்தை விலை',schemes2:'அரசு திட்டங்கள்',community:'சமூகம்',tools:'கருவி பகிர்வு',offline:'SMS / IVR',sos:'SOS அவசரம்',logout:'வெளியேறு'}};
+en:{home:'Home',check:'Check',sarthi:'Sarthi AI',mandi:'Mandi Rates',schemes:'Schemes',menu:'Menu',dash:'Dashboard',disease:'Disease Detection',trace:'Farm-to-Fork QR',irrigation:'Irrigation Advice',market:'Fertilizer Market',mandi2:'Mandi Prices',schemes2:'Govt Schemes',community:'Community',tools:'Tool Sharing',offline:'SMS / IVR Access',sos:'SOS Emergency',logout:'Logout',pf_name:'Full Name',pf_email:'Email (read-only)',pf_save:'Save Profile',pf_title:'Edit Profile',pf_phone:'Mobile Number',pf_state:'State / UT',pf_district:'District',pf_subdistrict:'Sub-district / Tehsil',pf_village:'Village',pf_land:'Land (Kattha)',pf_crop:'Main Crop',pf_sub:'Update your details — all fields optional'},
+hi:{home:'होम',check:'जांचें',sarthi:'सारथी AI',mandi:'मंडी भाव',schemes:'योजनाएं',menu:'मेन्यू',dash:'डैशबोर्ड',disease:'रोग पहचान',trace:'फार्म-टू-फोर्क QR',irrigation:'सिंचाई सलाह',market:'उर्वरक बाजार',mandi2:'मंडी भाव',schemes2:'सरकारी योजनाएं',community:'समुदाय',tools:'औज़ार साझेदारी',offline:'SMS / IVR',sos:'SOS आपातकाल',logout:'लॉगआउट',pf_name:'पूरा नाम',pf_email:'Email (केवल पढ़ने के लिए)',pf_save:'प्रोफ़ाइल सेव करें',pf_title:'प्रोफ़ाइल संपादित करें',pf_phone:'मोबाइल नंबर',pf_state:'राज्य / UT',pf_district:'जिला',pf_subdistrict:'उप-जिला / तहसील',pf_village:'गाँव',pf_land:'भूमि (Kattha)',pf_crop:'मुख्य फसल',pf_sub:'अपनी जानकारी अपडेट करें — सभी फ़ील्ड वैकल्पिक हैं'},
+pa:{home:'ਹੋਮ',check:'ਜਾਂਚੋ',sarthi:'ਸਾਰਥੀ AI',mandi:'ਮੰਡੀ ਭਾਅ',schemes:'ਯੋਜਨਾਵਾਂ',menu:'ਮੀਨੂ',dash:'ਡੈਸ਼ਬੋਰਡ',disease:'ਬਿਮਾਰੀ ਪਛਾਣ',trace:'ਫਾਰਮ-ਟੂ-ਫਾਰਕ QR',irrigation:'ਸਿੰਚਾਈ ਸਲਾਹ',market:'ਖਾਦ ਬਾਜ਼ਾਰ',mandi2:'ਮੰਡੀ ਭਾਅ',schemes2:'ਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ',community:'ਭਾਈਚਾਰਾ',tools:'ਸੰਦ ਸਾਂਝ',offline:'SMS / IVR',sos:'SOS ਐਮਰਜੈਂਸੀ',logout:'ਲੌਗਆਉਟ',pf_name:'ਪੂਰਾ ਨਾਮ',pf_email:'Email (ਸਿਰਫ ਪੜ੍ਹਨ ਲਈ)',pf_save:'ਪ੍ਰੋਫਾਈਲ ਸੇਵ ਕਰੋ',pf_title:'ਪ੍ਰੋਫਾਈਲ ਸੋਧੋ',pf_phone:'ਮੋਬਾਈਲ ਨੰਬਰ',pf_state:'ਰਾਜ / UT',pf_district:'ਜ਼ਿਲ੍ਹਾ',pf_subdistrict:'ਉਪ-ਜ਼ਿਲ੍ਹਾ / ਤਹਿਸੀਲ',pf_village:'ਗਾਂਵ',pf_land:'ਜ਼ਮੀਨ (ਕਤੱਥਾ)',pf_crop:'ਮੁੱਖ ਫਸਲ',pf_sub:'ਆਪਣੀ ਜਾਣਕਾਰੀ ਅੱਪਡੇਟ ਕਰੋ — ਸਾਰੇ ਖੇਤਰ ਵਿਕਲਪਿਕ ਹਨ'},
+te:{home:'హోమ్',check:'తనిఖీ',sarthi:'సారథి AI',mandi:'మండి ధరలు',schemes:'పథకాలు',menu:'మెనూ',dash:'డాష్‌బోర్డ్',disease:'వ్యాధి గుర్తింపు',trace:'ఫారమ్-టు-ఫార్క్ QR',irrigation:'ఇర్రిగేషన్ సలహా',market:'ఎరువుల మార్కెట్',mandi2:'మండి ధరలు',schemes2:'ప్రభుత్వ పథకాలు',community:'కమ్యూనిటీ',tools:'టూల్ షేరింగ్',offline:'SMS / IVR',sos:'SOS అత్యవసరం',logout:'లాగ్ అవుట్',pf_name:'పూర్తి పేరు',pf_email:'ఇమెయిల్ (చదవడానికి మాత్రమే)',pf_save:'ప్రొఫైల్ సేవ్ చేయండి',pf_title:'ప్రొఫైల్ సవరించండి',pf_phone:'మొబైల్ నంబర్',pf_state:'రాష్ట్రం / UT',pf_district:'జిల్లా',pf_subdistrict:'ఉప-జిల్లా / తాలూకా',pf_village:'గ్రామం',pf_land:'భూమి (కత్తా)',pf_crop:'ప్రధాన పంట',pf_sub:'మీ వివరాలను అప్‌డేట్ చేయండి — అన్ని ఫీల్డ్‌లు ఐచ్ఛికం'},
+mr:{home:'होम',check:'तपासणी',sarthi:'सारथी AI',mandi:'मंडी भाव',schemes:'योजना',menu:'मेनू',dash:'डॅशबोर्ड',disease:'रोग ओळख',trace:'फार्म-टू-फार्क QR',irrigation:'सिंचन सल्ला',market:'खत बाजार',mandi2:'मंडी भाव',schemes2:'शासकीय योजना',community:'समुदाय',tools:'साधन शेअरिंग',offline:'SMS / IVR',sos:'SOS आपत्काल',logout:'लॉगआउट',pf_name:'पूर्ण नाव',pf_email:'ईमेल (फक्त वाचनीय)',pf_save:'प्रोफाइल जतन करा',pf_title:'प्रोफाइल संपादित करा',pf_phone:'मोबाइल नंबर',pf_state:'राज्य / UT',pf_district:'जिल्हा',pf_subdistrict:'उप-जिल्हा / तालुका',pf_village:'गाव',pf_land:'जमीन (कत्था)',pf_crop:'मुख्य पीक',pf_sub:'तुमची माहिती अपडेट करा — सर्व फील्ड ऐच्छिक आहेत'},
+ta:{home:'முகப்பு',check:'சரிபார்',sarthi:'சாரதி AI',mandi:'சந்தை விலை',schemes:'திட்டங்கள்',menu:'மெனு',dash:'டாஷ்போர்டு',disease:'நோய் கண்டறிதல்',trace:'ஃபார்ம்-டு-ஃபார்க் QR',irrigation:'நீர்ப்பாசன ஆலோசனை',market:'உர சந்தை',mandi2:'சந்தை விலை',schemes2:'அரசு திட்டங்கள்',community:'சமூகம்',tools:'கருவி பகிர்வு',offline:'SMS / IVR',sos:'SOS அவசரம்',logout:'வெளியேறு',pf_name:'முழு பெயர்',pf_email:'மின்னஞ்சல் (படிக்க மட்டும்)',pf_save:'சுயவிவரத்தை சேமி',pf_title:'சுயவிவரத்தை திருத்து',pf_phone:'மொபைல் எண்',pf_state:'மாநிலம் / UT',pf_district:'மாவட்டம்',pf_subdistrict:'துணை மாவட்டம் / வட்டாரம்',pf_village:'கிராமம்',pf_land:'நிலம் (கத்தா)',pf_crop:'முக்கிய பயிர்',pf_sub:'உங்கள் விவரங்களை புதுப்பிக்கவும் — அனைத்து புலங்களும் விருப்பம்'}};
 function applyUiLang(lang){const d=UI_I18N[lang]||UI_I18N.en;document.querySelectorAll('[data-i18n]').forEach(el=>{if(d[el.dataset.i18n])el.textContent=d[el.dataset.i18n]})}
 function currentLang(){const a=document.getElementById('lang-select');const b=document.getElementById('voice-lang');return (a&&a.value)||(b&&b.value)||'en'}
+async function loadUserCount(){
+  const els=document.querySelectorAll('.hero-user-count, #hero-user-count');
+  if(!els.length)return;
+  try{
+    const r=await fetch('/api/stats/users');
+    const j=await readApiJson(r);
+    const c=(j.data&&j.data.count)||0;
+    const txt=c>=1000?(c/1000).toFixed(1).replace(/\.0$/,'')+'K+':c+'+';
+    els.forEach(el=>{el.textContent=txt});
+  }catch(e){els.forEach(el=>{el.textContent='—'})}
+}
 function changeLang(lang) {
-  localStorage.setItem('ks_lang', lang);
   const sel = document.getElementById('lang-select');
   if (sel) sel.value = lang;
   applyUiLang(lang);
@@ -2122,7 +2430,7 @@ function changeLang(lang) {
   showToast(`🌐 Language: ${names[lang]||lang}`, 'info');
 }
 // Restore saved language on load
-(function(){const l=localStorage.getItem('ks_lang')||'en';applyUiLang(l);const s=document.getElementById('lang-select');if(s)s.value=l;})();
+loadUserCount();startMspDash();(function(){const l=localStorage.getItem('ks_lang')||'en';applyUiLang(l);const s=document.getElementById('lang-select');if(s)s.value=l;})();
 
 // ── Toast ──
 function showToast(msg, type = 'info') {
