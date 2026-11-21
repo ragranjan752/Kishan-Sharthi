@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════
 
 const detectionService = require('./detections.service');
+const learning = require('../learning/learning.service');
 const { sendSuccess, sendCreated, errors } = require('../../utils/response');
 const { asyncHandler, AppError } = require('../../middleware/errorHandler');
 
@@ -27,6 +28,15 @@ const uploadAndScan = asyncHandler(async (req, res) => {
 // GET /api/v1/detections/:detectionId
 const getResult = asyncHandler(async (req, res) => {
   const result = await detectionService.getDetectionById(req.params.detectionId);
+  if (result && result.id) {
+    learning.queueDiseaseLabel({
+      detection_id: result.id,
+      image_ref: result.image_url || result.image_path || null,
+      predicted_crop: result.crop || result.predicted_crop || null,
+      predicted_disease: result.disease_name || result.predicted_disease || null,
+      confidence: result.confidence || null
+    }).catch(() => {});
+  }
   if (result && result.farmer_id && req.user && req.user.id !== result.farmer_id && (req.user.role || 'farmer') !== 'admin') {
     throw new AppError('Access denied', 403, 'FORBIDDEN');
   }

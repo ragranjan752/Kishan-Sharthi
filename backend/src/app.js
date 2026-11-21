@@ -24,6 +24,7 @@ const adminRoutes = require('./modules/admin/admin.routes');
 const demoRoutes = require('./modules/demo/demo.routes');
 const locationRoutes = require('./modules/locations/locations.routes');
 const advisoryRoutes = require('./modules/advisory/advisory.routes');
+const learningRoutes = require('./modules/learning/learning.routes');
 
 const app = express();
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -153,6 +154,7 @@ app.use('/api', miscRoutes);
 app.use('/api', adminRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/advisory', advisoryRoutes);
+app.use('/api/learning', learningRoutes);
 
 // ── 9. Error Handling & 404 Handlers ──
 app.use(notFoundHandler);

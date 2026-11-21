@@ -89,9 +89,12 @@ router.get('/dashboard', optionalAuth, async (req, res) => {
     } catch (_) { /* detections unavailable */ }
   }
 
-  // ── Irrigation advice from real weather forecast ──
+  // ── Weather + schemes in parallel (speed) ──
+  const [weather, schemesResult] = await Promise.all([
+    getWeatherForDistrict(farmer?.district).catch(() => null),
+    farmer ? Promise.resolve().then(() => require('../schemes/schemes.service').getEligibleSchemesForFarmer(farmer)).catch(() => null) : Promise.resolve(null)
+  ]);
   let irrigation = null, irrigationReason = null;
-  const weather = await getWeatherForDistrict(farmer?.district);
   if (weather?.rainProbability != null) {
     irrigation = weather.rainProbability >= 40 ? 'Skip' : 'Needed';
     irrigationReason = weather.rainProbability >= 40
@@ -101,15 +104,11 @@ router.get('/dashboard', optionalAuth, async (req, res) => {
 
   // ── Eligible schemes — real evaluation against farmer profile ──
   let eligibleSchemes = null, schemesAmount = null;
-  if (farmer) {
-    try {
-      const schemeService = require('../schemes/schemes.service');
-      const evaluated = await schemeService.getEligibleSchemesForFarmer(farmer);
-      const eligible = evaluated.filter(s => s.is_eligible);
-      eligibleSchemes = eligible.length;
-      const total = eligible.reduce((sum, s) => sum + (Number(s.benefit_amount) || 0), 0);
-      schemesAmount = total > 0 ? `₹${total.toLocaleString('en-IN')} available` : 'No cash benefit listed';
-    } catch (_) { /* schemes unavailable */ }
+  if (schemesResult) {
+    const eligible = schemesResult.filter(s => s.is_eligible);
+    eligibleSchemes = eligible.length;
+    const total = eligible.reduce((sum, s) => sum + (Number(s.benefit_amount) || 0), 0);
+    schemesAmount = total > 0 ? `₹${total.toLocaleString('en-IN')} available` : 'No cash benefit listed';
   }
 
   return sendSuccess(res, {

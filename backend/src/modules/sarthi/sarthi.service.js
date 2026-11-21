@@ -49,16 +49,26 @@ function buildSystemPrompt(farmer, verifiedContext, responseLang) {
 2. सत्यनिष्ठा: कभी भी फर्जी योजनाएं, मनगढ़ंत कीटनाशक दवा की मात्रा या फर्जी आंकड़े न बनाएं। यदि किसी तथ्य की पुष्टि न हो, तो स्पष्ट कहें: "इसकी पुष्टि हेतु कृपया अपने नजदीकी प्रखंड कृषि पदाधिकारी (BAO) या कृषि विज्ञान केंद्र (KVK) से संपर्क करें।"
 3. मात्राएं एवं माप: बिहार की स्थानीय माप (कट्ठा / बीघा / एकड़) में बात करें।
 4. प्राथमिक जैविक उपचार: कीट या रोग में पहले जैविक या सुरक्षित नीम-आधारित उपचार बताएं, रासायनिक दवा केवल गंभीर स्थिति में ही अनुशंसित करें।
+5. सटीकता: नuminate न करें — रोग निदान, दवा की मात्रा, MSP, योजनाएं, मौसम या शोध के आंकड़े कभी न बनाएं। जानकारी न हो तो स्पष्ट कहें कि पुष्टि नहीं हो पाई। संदेह हो तोienta बताएं।
+6. संरचना: "समस्या समझ" → "संभावित कारण" → "क्या करें" (प्राथमिकता क्रम में) → "सावधानियां" → "विशेषज्ञ से कब परामर्श लें"।
+7. क्षेत्रीय: सलाह राज्य/जिले के अनुसार दें; सामान्य जानकारी को क्षेत्रीय शोध न कहें।
+8. उत्तर शुरुआत: कभी अभिवादन, नाम या अपनी पहचान से शुरू न करें — सीधे उत्तर दें।
 ${contextBlock}`;
 }
 
-async function processFarmerChat({ message, farmer = {}, sessionId = null, lang = null, context = null }) {
+async function processFarmerChat({ message, farmer = {}, sessionId = null, lang = null, context = null, knowledge = [] }) {
   const detectedLang = detectLanguage(message);
   const responseLang = RESPONSE_LANGUAGES[lang] ? lang : detectedLang;
   const verifiedContext = retrieveVerifiedContext(message, farmer);
   let systemPrompt = buildSystemPrompt(farmer, verifiedContext, responseLang);
   if (context) {
     systemPrompt += `\n\n[संदर्भ: किसान ने अभी इस फसल रोग जांच के बारे में पूछा है — ${context}. कृपया उसी निदान, फसल एवं उपचार के संदर्भ में उत्तर दें।]`;
+  }
+
+  if (knowledge && knowledge.length) {
+    systemPrompt += '\n\n[Retrieved Verified Knowledge — cite these sources, do not invent]:\n' +
+      knowledge.map(k => '• [' + (k.trust_status || 'verified') + '] ' + k.title + ': ' + String(k.content || '').slice(0, 400)).join('\n') +
+      '\n\nनियम: केवल उपर दिए गए स्रोतों एवं सामान्य कृषि ज्ञान पर आधारित रहें। यदि उत्तर नहीं पता तो स्पष्ट कहें "यह पुष्टि नहीं हो पाई"।';
   }
 
   // Attempt multi-provider AI generation
@@ -74,27 +84,27 @@ async function processFarmerChat({ message, farmer = {}, sessionId = null, lang 
     const FALLBACK = {
       en: {
         ctx: (n, d, t) => `Hello ${n}! Verified information for your area (${d}) and crop:\n\n**${t.title_hi}**\n${t.content_hi}\n\n📌 *Source: ${t.verified_source}*\n\n(For urgent help, call the farmer helpline 1800-180-1551 or visit your nearest KVK.)`,
-        gen: (n) => `Hello ${n}! I'm gathering accurate, research-backed information for your query.\n\nFor immediate help with schemes and crop management in India, call the toll-free Kisan Call Centre **1800-180-1551** or contact your nearest **Krishi Vigyan Kendra (KVK)**.`
+        gen: (n) => `I don't have verified information for this specific question yet.\n\nFor immediate help with schemes and crop management in India, call the toll-free Kisan Call Centre **1800-180-1551** or contact your nearest **Krishi Vigyan Kendra (KVK)**.`
       },
       pa: {
         ctx: (n, d, t) => `ਸਤ ਸ੍ਰੀ ਅਕਾਲ ${n}! ਤੁਹਾਡੇ ਖੇਤਰ (${d}) ਅਤੇ ਫਸਲ ਲਈ ਪ੍ਰਮਾਣਿਤ ਜਾਣਕਾਰੀ:\n\n**${t.title_hi}**\n${t.content_hi}\n\n📌 *ਸਰੋਤ: ${t.verified_source}*\n\n(ਤੁਰੰਤ ਮਦਦ ਲਈ 1800-180-1551 ‘ਤੇ ਕਾਲ ਕਰੋ ਜਾਂ ਨੇੜਲੇ KVK ‘ਤੇ ਜਾਓ।)`,
-        gen: (n) => `ਸਤ ਸ੍ਰੀ ਅਕਾਲ ${n}! ਮੈਂ ਤੁਹਾਡੇ ਸਵਾਲ ਲਈ ਸਹੀ, ਖੋਜ-ਅਧਾਰਿਤ ਜਾਣਕਾਰੀ ਇਕੱਠੀ ਕਰ ਰਿਹਾ/ਰਹੀ ਹਾਂ।\n\nਤੁਰੰਤ ਮਦਦ ਲਈ **1800-180-1551** ‘ਤੇ ਕਾਲ ਕਰੋ ਜਾਂ ਆਪਣੇ ਨੇੜਲੇ **ਕ੍ਰਿਸ਼ੀ ਵਿਗਿਆਨ ਕੇਂਦਰ (KVK)** ਨਾਲ ਸੰਪਰਕ ਕਰੋ।`
+        gen: (n) => `ਇਸ ਸਵਾਲ ਦਾ ਪ੍ਰਮਾਣਿਤ ਜਵਾਬ ਅਜੇ ਉਪਲਬਧ ਨਹੀਂ।\n\nਤੁਰੰਤ ਮਦਦ ਲਈ **1800-180-1551** ‘ਤੇ ਕਾਲ ਕਰੋ ਜਾਂ ਆਪਣੇ ਨੇੜਲੇ **ਕ੍ਰਿਸ਼ੀ ਵਿਗਿਆਨ ਕੇਂਦਰ (KVK)** ਨਾਲ ਸੰਪਰਕ ਕਰੋ।`
       },
       te: {
         ctx: (n, d, t) => `నమస్కారం ${n}! మీ ప్రాంతం (${d}) మరియు పంట కోసం ధృవీకరించబడిన సమాచారం:\n\n**${t.title_hi}**\n${t.content_hi}\n\n📌 *మూలం: ${t.verified_source}*\n\n(తక్షణ సహాయం కోసం 1800-180-1551ాకు కాల్ చేయండి లేదా సమీప KVKానికి వెళ్లండి.)`,
-        gen: (n) => `నమస్కారం ${n}! మీ ప్రశ్నకు ఖచ్చితమైన, పరిశోధన-ఆధారిత సమాచారం సేకరిస్తున్నాను.\n\nతక్షణ సహాయం కోసం **1800-180-1551**కు కాల్ చేయండి లేదా సమీప KVKను సంప్రదించండి.`
+        gen: (n) => `ఈ ప్రశ్నకు ధృవీకరించిన సమాధానం ఇంకా అందుబాటులో లేదు.\n\nతక్షణ సహాయం కోసం **1800-180-1551**కు కాల్ చేయండి లేదా సమీప KVKను సంప్రదించండి.`
       },
       mr: {
         ctx: (n, d, t) => `नमस्कार ${n}! तुमच्या भाग (${d}) व पिकासाठी पडताळलेली माहिती:\n\n**${t.title_hi}**\n${t.content_hi}\n\n📌 *स्रोत: ${t.verified_source}*\n\n(तातडीच्या मदतीसाठी 1800-180-1551 वर कॉल करा किंवा जवळच्या KVK ला भेट द्या.)`,
-        gen: (n) => `नमस्कार ${n}! तुमच्या प्रश्नासाठी अचूक, संशोधन-आधारित माहिती गोळा करत आहे.\n\nतातडीच्या मदतीसाठी **1800-180-1551** वर कॉल करा किंवा जवळच्या KVK ला भेट द्या.`
+        gen: (n) => `या प्रश्नाचे पडताळलेले उत्तर अजून उपलब्ध नाही.\n\nतातडीच्या मदतीसाठी **1800-180-1551** वर कॉल करा किंवा जवळच्या KVK ला भेट द्या.`
       },
       ta: {
         ctx: (n, d, t) => `வணக்கம் ${n}! உங்கள் பகுதி (${d}) மற்றும் பயிருக்கான சரிபார்க்கப்பட்ட தகவல்:\n\n**${t.title_hi}**\n${t.content_hi}\n\n📌 *மூலம்: ${t.verified_source}*\n\n(அவசர உதவிக்கு 1800-180-1551 அழைக்கவும் அல்லது அருகிலுள்ள KVK-க்கு செல்லவும்.)`,
-        gen: (n) => `வணக்கம் ${n}! உங்கள் கேள்விக்கு துல்லியமான, ஆராய்ச்சி-சார்ந்த தகவலை சேகரிக்கிறேன்.\n\nஅவசர உதவிக்கு **1800-180-1551** அழைக்கவும் அல்லது அருகிலுள்ள KVK-வை அணுகவும்.`
+        gen: (n) => `இந்த கேள்விக்கு சரிபார்க்கப்பட்ட பதில் இன்னும் இல்லை.\n\nஅவசர உதவிக்கு **1800-180-1551** அழைக்கவும் அல்லது அருகிலுள்ள KVK-வை அணுகவும்.`
       },
       hi: {
         ctx: (n, d, t) => `नमस्ते ${n}! आपके क्षेत्र (${d}) एवं फसल से संबंधित प्रामाणिक जानकारी:\n\n**${t.title_hi}**\n${t.content_hi}\n\n📌 *स्रोत: ${t.verified_source}*\n\n(विशेष सहायता हेतु किसान कॉल सेंटर 1800-180-1551 पर संपर्क करें)`,
-        gen: (n) => `नमस्ते ${n}! आपके प्रश्न पर कृषि वैज्ञानिक मानकों के अनुसार सटीक जानकारी जुटाई जा रही है।\n\nकृषि योजनाओं व फसल प्रबंधन की तत्काल सहायता के लिए टोल-फ्री **1800-180-1551** अथवा अपने नजदीकी **कृषि विज्ञान केंद्र (KVK)** से संपर्क करें।`
+        gen: (n) => `इस प्रश्न का प्रामाणिक उत्तर अभी उपलब्ध नहीं है।\n\nकृषि योजनाओं व फसल प्रबंधन की तत्काल सहायता के लिए टोल-फ्री **1800-180-1551** अथवा अपने नजदीकी **कृषि विज्ञान केंद्र (KVK)** से संपर्क करें।`
       }
     };
     const langKey = (responseLang === 'en' || responseLang === 'english') ? 'en'

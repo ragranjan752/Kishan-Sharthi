@@ -3,83 +3,13 @@
 // ═══════════════════════════════════════════════════════════════════
 
 const express = require('express');
+const learning = require('../learning/learning.service');
 const router = express.Router();
 const { sendSuccess, sendCreated } = require('../../utils/response');
 const { authenticate, optionalAuth } = require('../../middleware/auth');
 const { z } = require('zod');
 
-const communityPosts = [
-  {
-    id: 1,
-    title: 'दरभंगा में मखाना की नई नर्सरी में पत्ती सड़न की रोकथाम?',
-    description: 'मखाना नर्सरी में कोमल पत्तियों पर काले धब्बे दिख रहे हैं। क्या कोई भाई जैविक उपचार बता सकता है?',
-    category: 'Disease',
-    crop: 'Makhana',
-    likes: 12,
-    reply_count: 4,
-    is_solved: 1,
-    author_name: 'राम कुमार (दरभंगा)',
-    user_name: 'राम कुमार (दरभंगा)',
-    district: 'Darbhanga',
-    created_at: new Date(Date.now() - 86400000).toISOString()
-  },
-  {
-    id: 2,
-    title: 'रोहतास में धान की सीधी बुवाई (DSR) का अनुभव कैसा रहा?',
-    description: 'डीएसआर विधि से पानी और मजदूरी की कितनी बचत हुई? खरपतवार नियंत्रण हेतु किस दवा का उपयोग किया?',
-    category: 'General',
-    crop: 'Dhan',
-    likes: 18,
-    reply_count: 6,
-    is_solved: 0,
-    author_name: 'उमेश सिंह (रोहतास)',
-    user_name: 'उमेश सिंह (रोहतास)',
-    district: 'Rohtas',
-    created_at: new Date(Date.now() - 172800000).toISOString()
-  },
-  {
-    id: 3,
-    title: 'समस्तीपुर में सरसों में माहू (Aphid) कीट का तुरंत इलाज?',
-    description: 'सरसों के पौधों पर काले चिपचिपे कीड़े लग रहे हैं। नीम तेल 5ml/लीटर का छिड़काव किया है पर ज्यादा असर नहीं हुआ। क्या उपचार करें?',
-    category: 'Pest Control',
-    crop: 'Sarson',
-    likes: 9,
-    reply_count: 3,
-    is_solved: 1,
-    author_name: 'सुरेश यादव (समस्तीपुर)',
-    user_name: 'सुरेश यादव (समस्तीपुर)',
-    district: 'Samastipur',
-    created_at: new Date(Date.now() - 250000000).toISOString()
-  },
-  {
-    id: 4,
-    title: 'खगड़िया में मक्का में फॉल आर्मीवर्म का प्रकोप',
-    description: 'मक्का के पत्तों में गोल छेद दिख रहे हैं। जैविक और रासायनिक दोनों विकल्प बताएं।',
-    category: 'Disease',
-    crop: 'Makka',
-    likes: 14,
-    reply_count: 5,
-    is_solved: 0,
-    author_name: 'दीपक कुमार (खगड़िया)',
-    user_name: 'दीपक कुमार (खगड़िया)',
-    district: 'Khagaria',
-    created_at: new Date(Date.now() - 320000000).toISOString()
-  },
-  {
-    id: 5,
-    title: 'बिहार डीजल अनुदान योजना का आवेदन कैसे करें?',
-    description: 'डीजल अनुदान के लिए पेट्रोल पंप रसीद पर 10 अंकों का किसान पंजीकरण नंबर लिखना अनिवार्य है क्या? फॉर्म कब तक भरा जाएगा?',
-    category: 'Scheme',
-    crop: 'All',
-    likes: 22,
-    reply_count: 7,
-    is_solved: 1,
-    author_name: 'विकास चौधरी (पटना)',
-    user_name: 'विकास चौधरी (पटना)',
-    district: 'Patna',
-    created_at: new Date(Date.now() - 400000000).toISOString()
-  }
-];
+const communityPosts = [];
 
 // In-memory replies + stats (demo store, same pattern as posts)
 const communityReplies = new Map();
@@ -154,6 +84,7 @@ router.post('/community/posts', authenticate, (req, res) => {
   };
   communityPosts.unshift(newPost);
   communityReplies.set(newPost.id, []);
+  learning.ingestCandidate({ module: 'community', ref_id: String(newPost.id), raw_text: (newPost.title||'')+' '+(newPost.problem||newPost.description||'')+' '+(newPost.solution||''), extracted: learning.extractHints((newPost.title||'')+' '+(newPost.problem||newPost.description||'')+' '+(newPost.solution||'')) }).catch(()=>{});
   return sendCreated(res, newPost, 'चर्चा सफलतापूर्वक पोस्ट की गई');
 });
 

@@ -8,15 +8,10 @@ const { sendSuccess, sendCreated } = require('../../utils/response');
 const { authenticate, optionalAuth } = require('../../middleware/auth');
 const { z } = require('zod');
 
-const toolListings = [
-  { id: 1, tool_name: 'Mahindra 575 DI Tractor (45 HP)', tool_type: 'Tractor', price_per_hour: 450, location: 'बिहटा, पटना (Bihta, Patna)', state: 'Bihar', available_from: '06:00', available_to: '19:00', status: 'available', notes: 'चालक सहित। कल्टीवेटर संलग्न।', owner_name: 'राम प्रसाद', owner_phone: '9876543210' },
-  { id: 2, tool_name: 'Mini Paddy Combine Harvester', tool_type: 'Harvester', price_per_hour: 850, location: 'बिक्रमगंज, रोहतास (Bikramganj, Rohtas)', state: 'Bihar', available_from: '07:00', available_to: '18:00', status: 'available', notes: 'धान कटाई हेतु उपयुक्त।', owner_name: 'उमेश प्रसाद', owner_phone: '9876501234' },
-  { id: 3, tool_name: 'Multi-crop Seed Cum Fertilizer Drill', tool_type: 'Seeder', price_per_hour: 250, location: 'बहेरी, दरभंगा (Baheri, Darbhanga)', state: 'Bihar', available_from: '06:00', available_to: '18:00', status: 'available', notes: 'मक्का एवं गेहूं की सटीक बुवाई हेतु।', owner_name: 'सीता देवी', owner_phone: '9876598765' },
-  { id: 4, tool_name: 'Battery Power Sprayer 16L', tool_type: 'Sprayer', price_per_hour: 80, location: 'मुशहरी, मुजफ्फरपुर (Mushahari, Muzaffarpur)', state: 'Bihar', available_from: '08:00', available_to: '17:00', status: 'available', notes: 'लीची व सब्जियों पर छिड़काव हेतु।', owner_name: 'अनिल कुमार', owner_phone: '9876512345' }
-];
+const toolListings = [];
 
 const toolBookings = [];
-let listingIdSeq = toolListings.length;
+let listingIdSeq = 0;
 let bookingIdSeq = 0;
 
 const normPhone = (p) => String(p || '').replace(/\D/g, '').slice(-10);

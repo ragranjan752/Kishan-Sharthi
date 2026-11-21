@@ -1305,3 +1305,48 @@ body.sidebar-locked {
 .msp-ticker-item b{color:#1B5E20;}
 @keyframes mspScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media(max-width:600px){.msp-ticker-label{display:none;}.msp-ticker-track{animation-duration:30s;}}
+
+/* ═══ ChatGPT-style AI Sarthi Chat ═══ */
+.chat-panel{width:460px;max-height:640px;border-radius:16px;border:1px solid #E5E7EB;box-shadow:0 12px 40px rgba(0,0,0,0.12);}
+.chat-header{background:#fff;color:var(--text);border-bottom:1px solid #F0F0F0;padding:14px 16px;}
+.chat-avatar{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;}
+.chat-title{color:var(--text);font-size:15px;}
+.chat-status{color:var(--text-muted);}
+.chat-close{background:#F3F4F6;color:var(--text);}
+.chat-close:hover{background:#E5E7EB;}
+.chat-messages{background:#fff;padding:20px 16px;gap:16px;max-height:420px;}
+.chat-msg{max-width:88%;}
+.msg-avatar{width:30px;height:30px;}
+.chat-msg.bot .msg-bubble{background:#F7F7F8;border:none;border-radius:18px;border-top-left-radius:4px;color:#1F2937;font-size:13.5px;padding:12px 16px;}
+.chat-msg.user .msg-bubble{background:#10A37F;color:#fff;border:none;border-radius:18px;border-top-right-radius:4px;font-size:13.5px;padding:12px 16px;}
+.chat-msg.user .msg-avatar{display:none;}
+.chat-suggestions{padding:0 0 8px;}
+.suggestion-chip,.chat-sugg-btn{background:#F7F7F8;border:1px solid #E5E7EB;border-radius:20px;padding:8px 14px;font-size:12px;color:#374151;}
+.suggestion-chip:hover,.chat-sugg-btn:hover{background:#ECFDF5;border-color:#10A37F;color:#065F46;}
+.chat-input-area{padding:12px;border-top:1px solid #F0F0F0;background:#fff;}
+.chat-input-area input{background:#F7F7F8;border:none;border-radius:24px;padding:12px 16px;font-size:14px;}
+.chat-input-area input:focus{background:#fff;box-shadow:0 0 0 2px rgba(16,163,127,0.25);}
+.chat-send{background:#10A37F;width:36px;height:36px;}
+.chat-send:hover{background:#0E8C6B;}
+.voice-btn{border-radius:50%;}
+@media(max-width:500px){.chat-panel{width:calc(100vw - 16px);right:0;}}
+
+/* Modern animated map preview */
+#state-map-frame{perspective:1200px;background:linear-gradient(160deg,#F0FDF4 0%,#DCFCE7 45%,#E0F2FE 100%);border-radius:10px;overflow:hidden;position:relative;}
+#state-map-frame::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 20%,rgba(34,197,94,.12),transparent 55%),radial-gradient(circle at 75% 80%,rgba(14,165,233,.10),transparent 50%);pointer-events:none;z-index:1;}
+#state-map-frame svg{transform-style:preserve-3d;animation:mapFloat3d 8s cubic-bezier(.45,0,.25,1) infinite;transform-origin:center;filter:drop-shadow(0 8px 18px rgba(21,128,61,.18));}
+#state-map-frame .map-state{transition:fill .3s ease,opacity .3s ease;}
+#state-map-frame svg:hover{animation-play-state:paused;}
+@keyframes mapFloat3d{
+  0%,100%{transform:rotateX(6deg) rotateY(-10deg) translateY(0) scale(1.02);}
+  20%{transform:rotateX(3deg) rotateY(8deg) translateY(-4px) scale(1.03);}
+  40%{transform:rotateX(9deg) rotateY(4deg) translateY(2px) scale(1.02);}
+  60%{transform:rotateX(4deg) rotateY(-6deg) translateY(-3px) scale(1.04);}
+  80%{transform:rotateX(8deg) rotateY(-12deg) translateY(1px) scale(1.02);}
+}
+@media (prefers-reduced-motion:reduce){#state-map-frame svg{animation:none;}}
+
+#state-map-frame .map-state-active{animation:stateGlow 2.2s ease-in-out infinite;}
+@keyframes stateGlow{0%,100%{filter:drop-shadow(0 0 3px rgba(255,140,0,.6)) brightness(1);}50%{filter:drop-shadow(0 0 10px rgba(255,80,0,.9)) brightness(1.12);}}
+#state-map-frame svg{transition:filter .4s ease;}
+#state-map-frame:hover svg{filter:saturate(1.25) hue-rotate(-8deg);}

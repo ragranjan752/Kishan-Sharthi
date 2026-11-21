@@ -619,13 +619,13 @@
           <div class="stats-grid">
             <div class="stat-card" data-icon="🌾">
               <div class="stat-label">Crop Health Score</div>
-              <div class="stat-value">87%</div>
-              <div class="stat-sub">↑ 3% from last week</div>
+              <div class="stat-value">—</div>
+              <div class="stat-sub">Loading…</div>
             </div>
             <div class="stat-card" data-icon="💧">
               <div class="stat-label">Today's Irrigation</div>
-              <div class="stat-value">Skip</div>
-              <div class="stat-sub">Rain expected tomorrow</div>
+              <div class="stat-value">—</div>
+              <div class="stat-sub">Loading…</div>
             </div>
             <div class="stat-card" data-icon="📈">
               <div class="stat-label">🏛️ MSP Rate</div>
@@ -634,8 +634,8 @@
             </div>
             <div class="stat-card" data-icon="🏛">
               <div class="stat-label">Eligible Schemes</div>
-              <div class="stat-value">4</div>
-              <div class="stat-sub">₹35,000 available</div>
+              <div class="stat-value">—</div>
+              <div class="stat-sub">Loading…</div>
             </div>
           </div>
           <div class="dashboard-grid">
@@ -647,20 +647,14 @@
                     <div class="ai-dot"></div><span>Kisan Sarthi AI</span>
                   </div>
                   <strong id="ai-advisory-title">Today's Recommendations for your crop:</strong><br><br>
-                  <div id="ai-advisory-content">
-                    🌡️ Temperature forecast: 28–34°C — within safe range for crop growth.<br>
-                    💧 <strong>Irrigation advice</strong>: Rain expected — review weather before pump operation.<br>
-                    🐛 Active field scouting recommended early morning for common pests.<br>
-                    🌾 Balanced moisture maintenance during critical development stage.<br>
-                    📦 Recommended inputs available at government rates via Fertilizer Market.
-                  </div>
+                  <div id="ai-advisory-content"><span style="color:var(--text-muted);font-size:12px;">⏳ Loading real advisory for your area…</span></div>
                 </div>
               </div>
               <div class="card">
                 <div class="card-title"><span class="dot"></span> Weather Snapshot</div>
                 <div id="dash-weather-icon" style="font-size:44px;text-align:center;margin:6px 0;">🌤️</div>
-                <div id="dash-weather-temp" style="text-align:center;font-size:32px;font-weight:800;color:var(--sky);">32°C</div>
-                <div id="dash-weather-desc" style="text-align:center;color:var(--text-muted);font-size:12px;margin-top:3px;">Patna, Bihar · Partly Cloudy</div>
+                <div id="dash-weather-temp" style="text-align:center;font-size:32px;font-weight:800;color:var(--sky);">—</div>
+                <div id="dash-weather-desc" style="text-align:center;color:var(--text-muted);font-size:12px;margin-top:3px;">Your location</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;">
                   <div style="text-align:center;padding:8px;background:var(--primary-pale);border-radius:8px;font-size:11px;">
                     <span id="dash-weather-wind">💨 18 km/h</span><br><span style="color:var(--text-muted)">Wind</span></div>
@@ -812,6 +806,22 @@
                 <input type="date" id="ftf-harvest">
               </div>
             </div>
+              <div class="input-group">
+                <label>Farmer Name</label>
+                <input type="text" id="ftf-farmer" placeholder="Your name">
+              </div>
+              <div class="input-group">
+                <label>Quantity (quintal)</label>
+                <input type="number" id="ftf-qty" min="0" step="0.1" placeholder="e.g. 25">
+              </div>
+              <div class="input-group">
+                <label>Certification</label>
+                <select id="ftf-cert"><option value="">None</option><option value="Organic">Organic Certified</option><option value="FPO">FPO Certified</option><option value="GI">GI Tagged</option><option value="PO">PO Certified</option></select>
+              </div>
+              <div class="input-group">
+                <label>Notes (optional)</label>
+                <input type="text" id="ftf-notes" placeholder="e.g. No pesticide used, natural farming">
+              </div>
             <button class="btn-primary" onclick="generateFarmTraceQr()">Generate Farm-to-Fork QR</button>
             <div id="ftf-status" class="trace-status"></div>
           </div>
@@ -948,77 +958,13 @@
         <!-- FERTILIZER MARKETPLACE -->
         <div class="page" id="page-market">
           <div class="section-title">🛒 Local Fertilizer Marketplace</div>
-          <p class="section-sub">Buy inputs directly from verified local sellers — best prices guaranteed</p>
-          <div class="card" style="margin-bottom:18px;">
-            <div class="card-title"><span class="dot"></span> Smart Fertilizer Calculator (Soil Based)</div>
-            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Khet ka size aur soil test levels
-              dalo. AI Sarthi exact quantity batayega — paise bhi bachao, mitti bhi bachao.</p>
-            <div class="fert-calc-grid">
-              <div class="input-group">
-                <label>Field Size (acres)</label>
-                <input id="fert-area" type="number" min="0.1" step="0.1" value="1" placeholder="e.g. 2.5">
-              </div>
-              <div class="input-group">
-                <label>Crop</label>
-                <select id="fert-crop">
-                  <option value="wheat">Wheat</option>
-                  <option value="rice">Rice/Paddy</option>
-                  <option value="cotton">Cotton</option>
-                  <option value="tomato">Tomato</option>
-                  <option value="maize">Maize</option>
-                </select>
-              </div>
-              <div class="input-group">
-                <label>Soil Nitrogen (N)</label>
-                <select id="fert-n">
-                  <option value="low">Low</option>
-                  <option value="medium" selected>Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-              <div class="input-group">
-                <label>Soil Phosphorus (P)</label>
-                <select id="fert-p">
-                  <option value="low">Low</option>
-                  <option value="medium" selected>Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-              <div class="input-group">
-                <label>Soil Potassium (K)</label>
-                <select id="fert-k">
-                  <option value="low">Low</option>
-                  <option value="medium" selected>Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-            </div>
-            <button class="btn-primary" onclick="calculateSmartFertilizer()">Calculate Exact Dose</button>
-            <div id="fert-calc-result" class="fert-calc-result"></div>
+          <div class="card" style="text-align:center;padding:60px 20px;">
+            <div style="font-size:52px;margin-bottom:12px;">🚧</div>
+            <h2 style="margin:0 0 8px;">Under Construction</h2>
+            <p style="color:var(--text-muted);margin:0;">Fertilizer Marketplace is coming soon. We are verifying sellers, prices and government-rate listings before launch.</p>
           </div>
-          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-            <input type="text" placeholder="🔍 Search fertilizers, pesticides…"
-              style="flex:1;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;min-width:200px;outline:none;background:var(--bg);">
-            <select
-              style="padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:#fff;outline:none;">
-              <option>📍 5 km</option>
-              <option>10 km</option>
-              <option>25 km</option>
-              <option>50 km</option>
-            </select>
-          </div>
-          <div class="filter-row">
-            <button class="filter-btn active" onclick="toggleFilter('All')">All</button>
-            <button class="filter-btn" onclick="toggleFilter('Fertilizers')">Fertilizers</button>
-            <button class="filter-btn" onclick="toggleFilter('Pesticides')">Pesticides</button>
-            <button class="filter-btn" onclick="toggleFilter('Seeds')">Seeds</button>
-            <button class="filter-btn" onclick="toggleFilter('Organic')">Organic</button>
-            <button class="filter-btn" onclick="toggleFilter('Government Rate')">Government Rate</button>
-          </div>
-          <div class="market-grid" id="market-grid"></div>
         </div>
 
-        <!-- MANDI PRICES -->
         <div class="page" id="page-mandi">
                           <!-- MSP CAROUSEL -->
         <div class="card" id="msp-carousel" style="margin-bottom:16px;">

@@ -609,7 +609,7 @@ function loginSuccess(user, token, rememberMe = true) {
   if (window.innerWidth <= 768) document.getElementById('mobile-menu-btn').style.display = 'block';
   prefillFarmTraceForm();
   prefillFertilizerCalculator();
-  prefillToolForm();
+  if (typeof prefillToolForm === 'function') prefillToolForm();
   loadDashboard(); loadProducts(); loadMandi('all'); loadSchemes();
   loadStateMap();
 }
@@ -1146,7 +1146,7 @@ function showPage(pageId, elem) {
   if (pageId === 'schemes') loadSchemes();
   if (pageId === 'trace') prefillFarmTraceForm();
   if (pageId === 'community') loadCommunity();
-  if (pageId === 'tools') loadToolSharing();
+  if (pageId === 'tools' && typeof loadToolSharing === 'function') loadToolSharing();
 }
 
 function triggerCamera() {
@@ -1178,10 +1178,12 @@ async function loadAdvisory() {
     if (ttl) ttl.textContent = 'AI Advisory — ' + (d.location.label || 'your area') + (d.crop ? ' · ' + d.crop : '');
 
     let html = '';
-    // Weather-based advice
+    // Weather-based advice (with reference)
     (d.weatherAdvice || []).forEach(a => {
       const icon = a.level === 'warn' ? '⚠️' : a.level === 'ok' ? '✅' : '🌦️';
-      html += '<div style="margin:6px 0;">' + icon + ' <strong>' + a.type + ':</strong> ' + a.text + '</div>';
+      html += '<div style="margin:6px 0;">' + icon + ' <strong>' + a.type + ':</strong> ' + a.text +
+        '<br><small style="color:var(--text-muted);">📅 ' + new Date(d.generatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) +
+        ' · Ref: IMD / Open-Meteo forecast</small></div>';
     });
 
     // Weather snapshot line
@@ -1198,9 +1200,9 @@ async function loadAdvisory() {
     if (d.news && d.news.length) {
       html += '<div style="margin-top:10px;font-weight:700;font-size:12px;">📰 Latest Agricultural News (' + (d.location.state || 'India') + ')</div>';
       d.news.slice(0, 5).forEach(n => {
-        const dt = n.pubDate ? new Date(n.pubDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
+        const dt = n.pubDate ? new Date(n.pubDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
         html += '<div style="margin:5px 0;font-size:12px;line-height:1.4;"><a href="' + n.link + '" target="_blank" style="color:var(--primary-dark);text-decoration:none;">' + n.title + '</a>' +
-          '<br><small style="color:var(--text-muted);">' + dt + ' · ' + (n.source || 'News') + '</small></div>';
+          '<br><small style="color:var(--text-muted);">📅 ' + dt + ' · 📰 ' + (n.source || 'News') + ' · <a href="' + n.link + '" target="_blank" style="color:var(--primary);">Source ↗</a></small></div>';
       });
     } else {
       html += '<div style="margin-top:8px;color:var(--text-muted);font-size:12px;">📰 No location-specific news found right now.</div>';
@@ -1211,7 +1213,14 @@ async function loadAdvisory() {
       html += '<div style="margin-top:8px;font-size:12px;">🏛️ ' + d.schemes.count + ' government schemes available — check Govt Schemes page.</div>';
     }
 
-    html += '<div style="margin-top:10px;font-size:10px;color:var(--text-muted);">Sources: ' + Object.values(d.sources || {}).join(' · ') + '</div>';
+    html += '<div style="margin-top:10px;font-size:10px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:8px;">' +
+      '📚 References: ' +
+      '<a href="https://mausam.imd.gov.in/" target="_blank" style="color:var(--primary);">IMD</a> · ' +
+      '<a href="https://open-meteo.com/" target="_blank" style="color:var(--primary);">Open-Meteo</a> · ' +
+      '<a href="https://www.pib.gov.in/" target="_blank" style="color:var(--primary);">PIB</a> · ' +
+      '<a href="https://casi.icrisat.org/" target="_blank" style="color:var(--primary);">CACP/ICAR</a> · ' +
+      '<a href="https://icar.org.in/" target="_blank" style="color:var(--primary);">ICAR</a>' +
+      '<br>🕐 Generated: ' + new Date(d.generatedAt).toLocaleString('en-IN') + '</div>';
     box.innerHTML = html;
   } catch (e) {
     box.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Advisory data currently unavailable. Please try again later.</div>';
@@ -1296,10 +1305,93 @@ async function loadDashboard() {
 
 let stateMapInstance = null;
 let stateMapLayer = null;
-const INDIA_STATES_GEOJSON = 'https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/india.geojson';
+const INDIA_STATES_GEOJSON = 'public/assets/india.geojson';
+const INDIA_DISTRICTS_GEOJSON = 'https://raw.githubusercontent.com/geohacker/india/master/district/india_district.geojson';
 
 function normStateName(x) {
   return String(x || '').toLowerCase().replace(/[^a-z]/g, '');
+}
+
+
+// ── District drill-down: click a state → show its districts ──
+async function openDistrictMap(stateName, el) {
+  if (!stateName || !el) return;
+  el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;color:var(--text-muted);font-size:12px;">Loading districts…</div>';
+  try {
+    if (!window._districtGeo) {
+      let r=null;for(let t=0;t<2;t++){try{r=await fetch(INDIA_DISTRICTS_GEOJSON);if(r.ok)break;}catch(_){}}
+      if(!r||!r.ok)throw new Error('district geojson fetch failed');
+      window._districtGeo = await r.json();
+    }
+    const feats = (window._districtGeo.features || []).filter(f => {
+      const n1 = (f.properties.NAME_1 || '').toLowerCase();
+      const t = stateName.toLowerCase().replace(/&/g, 'and').replace(/\s+/g, ' ').trim();
+      return n1 === t || n1.includes(t) || t.includes(n1);
+    });
+    if (!feats.length) { el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:12px;">District map unavailable</div>'; return; }
+
+    let minX=180,maxX=-180,minY=90,maxY=-90;
+    const walk = c => { if (typeof c[0]==='number') { minX=Math.min(minX,c[0]);maxX=Math.max(maxX,c[0]);minY=Math.min(minY,c[1]);maxY=Math.max(maxY,c[1]); } else c.forEach(walk); };
+    feats.forEach(f => { const g=f.geometry; if(g.type==='Polygon') g.coordinates.forEach(walk); else if(g.type==='MultiPolygon') g.coordinates.forEach(p=>p.forEach(walk)); });
+    const W=100,H=100,pad=2;
+    const sx = v => pad + (v-minX)/(maxX-minX||1)*(W-2*pad);
+    const sy = v => pad + (maxY-v)/(maxY-minY||1)*(H-2*pad);
+    const pt = c => sx(c[0]).toFixed(2)+','+sy(c[1]).toFixed(2);
+    const ring = r => r.map(pt).join(' ');
+    const paths = f => { const g=f.geometry;
+      if(g.type==='Polygon') return '<path d="M'+g.coordinates.map(r=>ring(r)+' Z').join(' M')+'"/>';
+      if(g.type==='MultiPolygon') return g.coordinates.map(p=>'<path d="M'+p.map(r=>ring(r)+' Z').join(' M')+'"/>').join('');
+      return ''; };
+
+    const u = currentUser || {};
+    const myDistrict = normStateName(u.district || '');
+    const svgns = 'http://www.w3.org/2000/svg';
+    const PALETTE = ['#BBDEFB','#C8E6C9','#F8BBD0','#FFE0B2','#D1C4E9','#B2DFDB','#F0F4C3','#DCEDC8','#FFCCBC','#E1BEE7'];
+    const svg = document.createElementNS(svgns,'svg');
+    svg.setAttribute('viewBox','0 0 100 100');
+    svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+    const defs=document.createElementNS(svgns,'defs');defs.innerHTML='<linearGradient id="mapGradActive" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB300"/><stop offset="1" stop-color="#FF6D00"/></linearGradient>';svg.appendChild(defs);
+    svg.style.cssText='width:100%;height:100%;display:block;';
+    feats.forEach(f => {
+      const p = document.createElementNS(svgns,'g');
+      p.innerHTML = paths(f);
+      const dName = normStateName(f.properties.NAME_2 || '');
+      const isMatch = myDistrict && (dName === myDistrict || (myDistrict.length>4 && (dName.includes(myDistrict)||myDistrict.includes(dName))));
+      p.querySelectorAll('path').forEach(pp => {
+        pp.setAttribute('fill', isMatch ? 'url(#mapGradActive)' : PALETTE[(feats.indexOf(f)%PALETTE.length)]);
+        pp.setAttribute('stroke', isMatch ? '#E65100' : '#81C784');
+        pp.setAttribute('stroke-width', isMatch ? '0.7' : '0.3');
+        pp.setAttribute('class', isMatch ? 'map-state-active' : 'map-state');
+      });
+      svg.appendChild(p);
+      // district name label at centroid
+      const coords=[];
+      const cc=c=>{if(typeof c[0]==='number')coords.push(c);else c.forEach(cc);};
+      const gg=f.geometry; if(gg.type==='Polygon')gg.coordinates.forEach(cc); else if(gg.type==='MultiPolygon')gg.coordinates.forEach(pp=>pp.forEach(cc));
+      if(coords.length){const cx=coords.reduce((a,c)=>a+c[0],0)/coords.length, cy=coords.reduce((a,c)=>a+c[1],0)/coords.length;
+        const t=document.createElementNS(svgns,'text');
+        t.setAttribute('x',sx(cx).toFixed(2));t.setAttribute('y',sy(cy).toFixed(2));
+        t.setAttribute('text-anchor','middle');t.setAttribute('font-size','2.2');
+        t.setAttribute('fill', isMatch?'#E65100':'#2E7D32');
+        t.setAttribute('font-weight','600');t.setAttribute('pointer-events','none');
+        t.textContent=(f.properties.NAME_2||'').slice(0,14);
+        svg.appendChild(t);}
+    });
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText='position:relative;width:100%;height:100%;';
+    wrap.appendChild(svg);
+    const tag = document.createElement('div');
+    tag.style.cssText='position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--primary-dark);white-space:nowrap;';
+    tag.textContent = '📍 ' + stateName;
+    wrap.appendChild(tag);
+    const back = document.createElement('button');
+    back.textContent = '← All India';
+    back.style.cssText='position:absolute;top:8px;left:8px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:4px 10px;font-size:11px;cursor:pointer;';
+    back.onclick = () => loadStateMap();
+    wrap.appendChild(back);
+    el.innerHTML = ''; el.appendChild(wrap);
+  } catch(e) { console.warn('district map failed:', e.message); }
 }
 
 function stateMapFallback(el, msg) {
@@ -1315,66 +1407,84 @@ async function loadStateMap() {
   const subName = (u.subdistrict || u.block) && (u.subdistrict || u.block) !== 'Not specified' ? (u.subdistrict || u.block) : null;
   const villageName = u.village && u.village !== 'Not specified' ? u.village : null;
 
-  el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px;gap:8px;"><span style="font-size:22px;">🗺️</span> Loading your location…</div>';
-  if (!stateName && !districtName) {
-    stateMapFallback(el, 'Complete your location details in your profile to see your local map.');
-    return;
-  }
-
-  if (!window.L) { stateMapFallback(el, 'Map library unavailable'); return; }
-  if (stateMapInstance) { try { stateMapInstance.remove(); } catch (_) {} stateMapInstance = null; stateMapLayer = null; }
-  el.innerHTML = '';
-  const map = L.map(el, { scrollWheelZoom: false, zoomControl: true }).setView([22.5, 79.0], 5);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors', maxZoom: 18
-  }).addTo(map);
-  stateMapInstance = map;
-
-  // Resolve saved profile location → coordinates via backend geocode
-  let lat = null, lng = null;
+  // Static India map — GeoJSON rendered to inline SVG (no tiles, no Leaflet)
+  el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:12px;">Loading map…</div>';
   try {
-    const geoRes = await fetch('/api/locations/geocode?village=' + encodeURIComponent(villageName || '') + '&subdistrict=' + encodeURIComponent(subName || '') + '&district=' + encodeURIComponent(districtName || '') + '&state=' + encodeURIComponent(stateName || ''));
-    const gj = await geoRes.json();
-    const g = gj && gj.data ? gj.data : null;
-    if (g && g.lat != null) { lat = g.lat; lng = g.lng; }
-  } catch (e) { console.warn('geocode failed:', e.message); }
+    const res = await fetch(INDIA_STATES_GEOJSON);
+    const gj = await res.json();
+    const india = (gj.features || []).filter(f => f.properties && f.properties.name);
+    if (!india.length) throw new Error('no india features');
 
-  // Fallback: state-level polygon if village geocode failed
-  if (lat == null) {
-    try {
-      const res = await fetch(INDIA_STATES_GEOJSON);
-      const gj2 = await res.json();
-      const india = (gj2.features || []).filter(f => f.properties && f.properties.name);
-      const target = normStateName(stateName || districtName || 'India');
-      let matched = null;
-      for (const f of india) {
-        const n = normStateName((f.properties.name || f.properties['name:en'] || f.properties.name_en || f.properties.postal || ''));
-        if (n === target || (target.length > 4 && (n.includes(target) || target.includes(n)))) { matched = f; break; }
-      }
-      const feats = matched ? [matched] : india;
-      const layer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
-        style: () => ({ color: '#FFB300', weight: 1.2, fillColor: '#FFB300', fillOpacity: matched ? 0.25 : 0.08 })
-      }).addTo(map);
-      stateMapLayer = layer;
-      map.fitBounds(layer.getBounds().pad(0.1));
-      if (!matched) { stateMapFallback(el, 'Could not find your location on the map. Check your profile village/district.'); return; }
-      // state-level view: show saved location popup at state center
-      const c = layer.getBounds().getCenter();
-      const label = [villageName, subName, districtName, stateName].filter(Boolean).join(' · ');
-      if (label) L.marker(c).addTo(map).bindPopup('<b>📍 ' + label + '</b><br><small>Village-level map unavailable</small>').openPopup();
-    } catch (e) { console.warn('state geojson failed:', e.message); stateMapFallback(el, 'Location map unavailable — ' + (stateName || districtName || '')); return; }
-  } else {
-    map.setView([lat, lng], villageName ? 14 : 11);
-    const label = [villageName, subName, districtName, stateName].filter(Boolean).join(', ');
-    L.marker([lat, lng]).addTo(map)
-      .bindPopup('<b>📍 ' + (villageName || districtName || stateName) + '</b><br>' + [subName, districtName, stateName].filter(Boolean).join(' · ') + '<br><a href="https://www.openstreetmap.org/?mlat=' + lat + '&mlon=' + lng + '#map=14/' + lat + '/' + lng + '" target="_blank">Open in OpenStreetMap</a>')
-      .openPopup();
+    // equirectangular projection to fit 100x100 viewBox
+    let minX=180,maxX=-180,minY=90,maxY=-90;
+    const walk = c => { if (typeof c[0]==='number') { minX=Math.min(minX,c[0]);maxX=Math.max(maxX,c[0]);minY=Math.min(minY,c[1]);maxY=Math.max(maxY,c[1]); } else c.forEach(walk); };
+    india.forEach(f => { const g=f.geometry; if(g.type==='Polygon') g.coordinates.forEach(walk); else if(g.type==='MultiPolygon') g.coordinates.forEach(p=>p.forEach(walk)); });
+    const W=100,H=100,pad=2;
+    const sx = v => pad + (v-minX)/(maxX-minX||1)*(W-2*pad);
+    const sy = v => pad + (maxY-v)/(maxY-minY||1)*(H-2*pad);
+    const pt = c => sx(c[0]).toFixed(2)+','+sy(c[1]).toFixed(2);
+    const ring = r => r.map(pt).join(' ');
+    const paths = f => {
+      const g=f.geometry;
+      if(g.type==='Polygon') return '<path d="M'+g.coordinates.map(r=>ring(r)+' Z').join(' M')+'"/>';
+      if(g.type==='MultiPolygon') return g.coordinates.map(p=>'<path d="M'+p.map(r=>ring(r)+' Z').join(' M')+'"/>').join('');
+      return '';
+    };
+
+    const target = normStateName(stateName || '');
+    let matched = null;
+    for (const f of india) {
+      const n = normStateName((f.properties.name || f.properties['name:en'] || f.properties.name_en || f.properties.postal || ''));
+      if (n === target || (target.length > 4 && (n.includes(target) || target.includes(n)))) { matched = f; break; }
+    }
+
+    const svgns = 'http://www.w3.org/2000/svg';
+    const PALETTE = ['#BBDEFB','#C8E6C9','#F8BBD0','#FFE0B2','#D1C4E9','#B2DFDB','#F0F4C3','#DCEDC8','#FFCCBC','#E1BEE7'];
+    const svg = document.createElementNS(svgns,'svg');
+    svg.setAttribute('viewBox','0 0 100 100');
+    svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+    svg.style.cssText='width:100%;height:100%;display:block;';
+    const defs0=document.createElementNS(svgns,'defs');defs0.innerHTML='<linearGradient id="mapGradActive" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB300"/><stop offset="1" stop-color="#FF6D00"/></linearGradient>';svg.appendChild(defs0);
+    const st=document.createElement('style');st.textContent='.map-state{animation:mapFade .6s ease both;}.map-state-active{animation:mapPulse 1.6s ease-in-out infinite;transform-origin:center;transform-box:fill-box;}@keyframes mapFade{from{opacity:0}to{opacity:1}}@keyframes mapPulse{0%,100%{opacity:1;filter:drop-shadow(0 0 0 rgba(255,179,0,0))}50%{opacity:.85;filter:drop-shadow(0 0 6px rgba(255,140,0,.8))}}';document.head.appendChild(st);
+    india.forEach(f => {
+      const p = document.createElementNS(svgns,'g');
+      p.innerHTML = paths(f);
+      const isMatch = matched && f === matched;
+      p.querySelectorAll('path').forEach(pp => {
+        pp.setAttribute('fill', isMatch ? 'url(#mapGradActive)' : PALETTE[(india.indexOf(f)%PALETTE.length)]);
+        pp.setAttribute('class', isMatch ? 'map-state-active' : 'map-state');
+        pp.style.cursor = 'pointer';
+        pp.addEventListener('click', () => openDistrictMap(f.properties.name || f.properties['name:en'] || '', el));
+        pp.setAttribute('stroke', isMatch ? '#E65100' : '#81C784');
+        pp.setAttribute('stroke-width', isMatch ? '0.6' : '0.25');
+      });
+      svg.appendChild(p);
+      const coords=[];const cc=c=>{if(typeof c[0]==='number')coords.push(c);else c.forEach(cc);};const gg=f.geometry;if(gg.type==='Polygon')gg.coordinates.forEach(cc);else if(gg.type==='MultiPolygon')gg.coordinates.forEach(pp=>pp.forEach(cc));
+      if(coords.length){const cx=coords.reduce((a,c)=>a+c[0],0)/coords.length,cy=coords.reduce((a,c)=>a+c[1],0)/coords.length;
+        const t=document.createElementNS(svgns,'text');
+        t.setAttribute('x',sx(cx).toFixed(2));t.setAttribute('y',sy(cy).toFixed(2));
+        t.setAttribute('text-anchor','middle');t.setAttribute('font-size','2.6');
+        t.setAttribute('fill',isMatch?'#E65100':'#2E7D32');
+        t.setAttribute('font-weight','700');t.setAttribute('pointer-events','none');
+        t.textContent=(f.properties.name||'').replace(/\s*(Union Territory|UT)\s*/i,'').slice(0,16);
+        svg.appendChild(t);}
+    });
+
+    // location label overlay
+    const label = [villageName, subName, districtName, stateName].filter(Boolean).join(' · ') || stateName || districtName || 'India';
+    const wrap = document.createElement('div');
+    wrap.style.cssText='position:relative;width:100%;height:100%;';
+    wrap.appendChild(svg);
+    const tag = document.createElement('div');
+    tag.style.cssText='position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--primary-dark);white-space:nowrap;';
+    tag.textContent = '📍 ' + label;
+    wrap.appendChild(tag);
+    el.innerHTML = ''; el.appendChild(wrap);
+
+  } catch (e) {
+    console.warn('static map failed:', e.message);
+    stateMapFallback(el, 'Map unavailable — ' + (stateName || districtName || 'your area'));
   }
-
-  map.invalidateSize();
-  setTimeout(() => { try { map.invalidateSize(); } catch (_) {} }, 150);
-  setTimeout(() => { try { map.invalidateSize(); } catch (_) {} }, 600);
-  window.addEventListener('resize', () => { try { map.invalidateSize(); } catch (_) {} });
 }
 
 function stateMapFallbackMsg() {}
@@ -1481,6 +1591,7 @@ function handleImageUpload(e) {
   reader.readAsDataURL(file);
 }
 
+async function submitFeedback(module,refId,rating){try{await fetch('/api/learning/feedback',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(getAuthToken()||'')},body:JSON.stringify({module,ref_id:String(refId),rating})});showToast('✅ Feedback recorded','success')}catch(e){}}
 function showDiseaseResult(result, isDisease) {
   recordDiseaseScan(result, isDisease);
   document.getElementById('disease-result').innerHTML = `
@@ -1490,6 +1601,7 @@ function showDiseaseResult(result, isDisease) {
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-size:12px;color:var(--text-muted);">Confidence</span><div class="confidence-bar" style="flex:1;"><div class="confidence-fill" style="width:${result.confidence}%;"></div></div><strong style="font-size:13px;">${result.confidence}%</strong></div>
       <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Severity: <strong>${result.severity}</strong></p>
       <div class="ai-bubble"><div class="ai-header"><div class="ai-dot"></div><span>AI Recommendation</span></div><strong>💊 Treatment:</strong><br>${result.cure}<br><br><strong>🛡 Prevention:</strong><br>${result.prevention}</div>
+      ${isDisease ? '<div style="display:flex;gap:8px;margin-top:10px;"><button class="btn-hero-outline" style="flex:1;padding:8px;font-size:12px;" onclick="submitFeedback(&quot;disease&quot;,&quot;det-'+Date.now()+'&quot;,&quot;correct_diag&quot;)">✅ सही निदान</button><button class="btn-hero-outline" style="flex:1;padding:8px;font-size:12px;" onclick="submitFeedback(&quot;disease&quot;,&quot;det-'+Date.now()+'&quot;,&quot;wrong_diag&quot;)">❌ गलत</button></div>' : ''}
       ${isDisease ? '<button class="btn-primary" style="margin-top:12px;width:100%;" onclick="buyMedicine()">🛒 Buy Recommended Medicine</button>' : ''}
       <button class="btn-hero-outline" style="margin-top:10px;width:100%;padding:10px;font-size:13px;border-radius:10px;" onclick="resetUpload()">📷 नई फोटो लें / Scan Another</button>
     </div>`;
@@ -1689,6 +1801,8 @@ function prefillFarmTraceForm() {
     locationEl.value = [u.block, u.district, u.state || 'Bihar'].filter(Boolean).join(', ') || 'Darbhanga, Bihar';
   }
   if (harvestEl && !harvestEl.value) harvestEl.value = new Date().toISOString().slice(0, 10);
+  const farmerEl = document.getElementById('ftf-farmer');
+  if (farmerEl && !farmerEl.value) farmerEl.value = u.name || '';
 }
 
 function downloadTraceQr() {
@@ -1783,6 +1897,10 @@ async function generateFarmTraceQr() {
         crop,
         farm_location: farmLocation,
         harvest_date: harvestDate,
+        farmer_name: document.getElementById('ftf-farmer')?.value || currentUser?.name || 'Farmer',
+        quantity_quintal: document.getElementById('ftf-qty')?.value || null,
+        certification: document.getElementById('ftf-cert')?.value || null,
+        notes: document.getElementById('ftf-notes')?.value || null,
         disease_logs_json: JSON.stringify(effectiveLogs)
       })
     });
@@ -2664,15 +2782,9 @@ async function loadCommunity() {
     renderCommunityPosts(cachedCommunityPosts);
     loadCommunityStats();
   } catch (err) {
-    console.warn('Community load error, showing verified Bihar farmer Q&A:', err);
-    cachedCommunityPosts = [
-      { id: 1, title: 'दरभंगा में मखाना की नई नर्सरी में पत्ती सड़न की रोकथाम?', description: 'मखाना नर्सरी में कोमल पत्तियों पर काले धब्बे दिख रहे हैं। क्या कोई भाई जैविक उपचार बता सकता है?', category: 'Disease', crop: 'Makhana', likes: 12, reply_count: 4, is_solved: 1, user_name: 'राम कुमार (दरभंगा)', created_at: new Date(Date.now() - 86400000).toISOString() },
-      { id: 2, title: 'रोहतास में धान की सीधी बुवाई (DSR) का अनुभव कैसा रहा?', description: 'डीएसआर विधि से पानी और मजदूरी की कितनी बचत हुई? खरपतवार नियंत्रण हेतु किस दवा का उपयोग किया?', category: 'General', crop: 'Dhan', likes: 18, reply_count: 6, is_solved: 0, user_name: 'उमेश सिंह (रोहतास)', created_at: new Date(Date.now() - 172800000).toISOString() },
-      { id: 3, title: 'समस्तीपुर में सरसों में माहू (Aphid) कीट का तुरंत इलाज?', description: 'सरसों के पौधों पर काले चिपचिपे कीड़े लग रहे हैं। नीम तेल 5ml/लीटर का छिड़काव किया है पर ज्यादा असर नहीं हुआ। क्या उपचार करें?', category: 'Pest Control', crop: 'Sarson', likes: 9, reply_count: 3, is_solved: 1, user_name: 'सुरेश यादव (समस्तीपुर)', created_at: new Date(Date.now() - 250000000).toISOString() },
-      { id: 4, title: 'खगड़िया में मक्का में फॉल आर्मीवर्म का प्रकोप', description: 'मक्का के पत्तों में गोल छेद दिख रहे हैं। जैविक और रासायनिक दोनों विकल्प बताएं।', category: 'Disease', crop: 'Makka', likes: 14, reply_count: 5, is_solved: 0, user_name: 'दीपक कुमार (खगड़िया)', created_at: new Date(Date.now() - 320000000).toISOString() },
-      { id: 5, title: 'बिहार डीजल अनुदान योजना का आवेदन कैसे करें?', description: 'डीजल अनुदान के लिए पेट्रोल पंप रसीद पर 10 अंकों का किसान पंजीकरण नंबर लिखना अनिवार्य है क्या? फॉर्म कब तक भरा जाएगा?', category: 'Scheme', crop: 'All', likes: 22, reply_count: 7, is_solved: 1, user_name: 'विकास चौधरी (पटना)', created_at: new Date(Date.now() - 400000000).toISOString() }
-    ];
-    renderCommunityPosts(cachedCommunityPosts);
+    console.warn('Community load error:', err);
+    cachedCommunityPosts = [];
+    renderCommunityPosts([]);
     loadCommunityStats();
   }
 }
